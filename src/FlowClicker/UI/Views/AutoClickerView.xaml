@@ -1,0 +1,284 @@
+<UserControl x:Class="FlowClicker.UI.Views.AutoClickerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="clr-namespace:FlowClicker.Core.Services.Models"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <StackPanel Margin="24,16,24,16">
+            <TextBlock Text="Auto Clicker" Style="{StaticResource PageHeading}" />
+            <Border Style="{StaticResource SectionCard}" Margin="0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <ui:TextBlock FontTypography="BodyStrong">
+                            <ui:TextBlock.Style>
+                                <Style TargetType="ui:TextBlock">
+                                    <Setter Property="Text" Value="Fixed coordinates" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsCurrentCursor}" Value="True">
+                                            <Setter Property="Text" Value="Follow cursor" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ui:TextBlock.Style>
+                        </ui:TextBlock>
+                        <TextBlock Style="{StaticResource RunStatus}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                VerticalAlignment="Center" Margin="0,0,20,0">
+                        <StackPanel Margin="0,0,20,0">
+                            <ui:TextBlock Text="{Binding TotalClicksFormatted}" FontTypography="BodyStrong" />
+                            <ui:TextBlock Text="Total actions" FontTypography="Caption"
+                                          Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <ui:TextBlock Text="{Binding InstantaneousCpsFormatted}" FontTypography="BodyStrong" />
+                            <ui:TextBlock Text="Current rate" FontTypography="Caption"
+                                          Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <ui:Button Grid.Column="2"
+                               Command="{Binding ToggleClickingCommand}"
+                               MinWidth="112"
+                               Height="38" VerticalAlignment="Center"
+                               CornerRadius="4">
+                        <ui:Button.Style>
+                            <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                                <Setter Property="Appearance" Value="Primary" />
+                                <Setter Property="Content" Value="Start (F6)" />
+                                <Setter Property="Icon" Value="{ui:FontIcon '&#xE768;', FontFamily='Segoe Fluent Icons, Segoe MDL2 Assets', FontSize=16}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                        <Setter Property="Appearance" Value="Danger" />
+                                        <Setter Property="Content" Value="Stop (F6)" />
+                                        <Setter Property="Icon" Value="{ui:FontIcon '&#xE71A;', FontFamily='Segoe Fluent Icons, Segoe MDL2 Assets', FontSize=16}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:Button.Style>
+                    </ui:Button>
+                </Grid>
+            </Border>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="24,0,24,12"
+                      IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBooleanConverter}}">
+            <StackPanel>
+                <TextBlock Text="Timing" Style="{StaticResource SectionHeading}" />
+                <Border Style="{StaticResource SectionCard}">
+                    <StackPanel>
+                        <!-- CPS Slider -->
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <ui:TextBlock Text="Clicks per second"
+                                              FontTypography="Caption"
+                                              Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                <Slider Minimum="1"
+                                        Maximum="1000"
+                                        Value="{Binding Cps, Mode=TwoWay}"
+                                        IsSnapToTickEnabled="False"
+                                        Margin="0,6,16,0" />
+                            </StackPanel>
+                            <ui:NumberBox Grid.Column="1"
+                                          Value="{Binding Cps, Mode=TwoWay}"
+                                          Minimum="1"
+                                          Maximum="2000"
+                                          Width="120"
+                                          VerticalAlignment="Center" />
+                        </Grid>
+
+                        <!-- Detailed Time Interval (H : M : S : Ms) -->
+                        <ui:TextBlock Text="Interval"
+                                      FontTypography="Caption"
+                                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                      Margin="0,0,0,8" />
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Margin="0,0,8,0">
+                                <ui:TextBlock Text="Hours" FontTypography="Caption" />
+                                <ui:NumberBox Value="{Binding Hours, Mode=TwoWay}"
+                                              Minimum="0"
+                                              Margin="0,4,0,0"
+                                              ValueChanged="OnIntervalBoxChanged" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="4,0,4,0">
+                                <ui:TextBlock Text="Minutes" FontTypography="Caption" />
+                                <ui:NumberBox Value="{Binding Minutes, Mode=TwoWay}"
+                                              Minimum="0"
+                                              Margin="0,4,0,0"
+                                              ValueChanged="OnIntervalBoxChanged" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Margin="4,0,4,0">
+                                <ui:TextBlock Text="Seconds" FontTypography="Caption" />
+                                <ui:NumberBox Value="{Binding Seconds, Mode=TwoWay}"
+                                              Minimum="0"
+                                              Margin="0,4,0,0"
+                                              ValueChanged="OnIntervalBoxChanged" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="3" Margin="8,0,0,0">
+                                <ui:TextBlock Text="Milliseconds" FontTypography="Caption" />
+                                <ui:NumberBox Value="{Binding Milliseconds, Mode=TwoWay}"
+                                              Minimum="0"
+                                              Margin="0,4,0,0"
+                                              ValueChanged="OnIntervalBoxChanged" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="Mouse action" Style="{StaticResource SectionHeading}" Margin="0,12,0,8" />
+                <Border Style="{StaticResource SectionCard}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Mouse Button Selection -->
+                        <StackPanel Margin="0,0,12,0">
+                            <ui:TextBlock Text="Mouse button" FontTypography="BodyStrong" />
+                            <ComboBox SelectedValue="{Binding SelectedButton, Mode=TwoWay}"
+                                      SelectedValuePath="Tag"
+                                      Margin="0,8,0,0"
+                                      HorizontalAlignment="Stretch">
+                                <ComboBoxItem Content="Left Button" Tag="{x:Static models:ClickMouseButton.Left}" IsSelected="True" />
+                                <ComboBoxItem Content="Right Button" Tag="{x:Static models:ClickMouseButton.Right}" />
+                                <ComboBoxItem Content="Middle Button" Tag="{x:Static models:ClickMouseButton.Middle}" />
+                                <ComboBoxItem Content="XButton 1 (Back)" Tag="{x:Static models:ClickMouseButton.XButton1}" />
+                                <ComboBoxItem Content="XButton 2 (Forward)" Tag="{x:Static models:ClickMouseButton.XButton2}" />
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- Click Type Selection -->
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                            <ui:TextBlock Text="Click type" FontTypography="BodyStrong" />
+                            <ComboBox SelectedValue="{Binding SelectedClickType, Mode=TwoWay}"
+                                      SelectedValuePath="Tag"
+                                      Margin="0,8,0,0"
+                                      HorizontalAlignment="Stretch">
+                                <ComboBoxItem Content="Single Click" Tag="{x:Static models:ClickType.Single}" IsSelected="True" />
+                                <ComboBoxItem Content="Double Click" Tag="{x:Static models:ClickType.Double}" />
+                                <ComboBoxItem Content="Hold (no repeated clicks)" Tag="{x:Static models:ClickType.Hold}" />
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Click Location Card -->
+                <Border Style="{StaticResource SectionCard}">
+                    <StackPanel>
+                        <ui:TextBlock Text="Click location" FontTypography="BodyStrong" Margin="0,0,0,8" />
+
+                        <WrapPanel Margin="0,0,0,6">
+                            <RadioButton Content="Follow cursor"
+                                         IsChecked="{Binding IsCurrentCursor, Mode=TwoWay}" Margin="0,0,16,0" />
+                            <RadioButton Content="Fixed coordinates"
+                                         IsChecked="{Binding IsCurrentCursor, Mode=TwoWay, Converter={StaticResource InverseBooleanConverter}}" />
+                        </WrapPanel>
+
+                        <Grid Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <ui:TextBlock Text="X" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <ui:NumberBox Grid.Column="1" Value="{Binding FixedX, Mode=TwoWay}"
+                                          IsEnabled="{Binding IsCurrentCursor, Converter={StaticResource InverseBooleanConverter}}" />
+
+                            <ui:TextBlock Grid.Column="2" Text="Y" VerticalAlignment="Center" Margin="16,0,8,0" />
+                            <ui:NumberBox Grid.Column="3" Value="{Binding FixedY, Mode=TwoWay}"
+                                          IsEnabled="{Binding IsCurrentCursor, Converter={StaticResource InverseBooleanConverter}}" />
+
+                            <ui:Button Grid.Column="4"
+                                       Command="{Binding PickCoordinatesCommand}"
+                                       Content="Pick location (F7)"
+                                       Margin="16,0,0,0"
+                                       CornerRadius="4" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="Advanced" Style="{StaticResource SectionHeading}" Margin="0,12,0,8" />
+                <Border Style="{StaticResource SectionCard}">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <ui:TextBlock Text="Click variation" FontTypography="BodyStrong" />
+                                <ui:TextBlock Text="Vary the click interval and fixed position." TextWrapping="Wrap"
+                                              FontTypography="Caption"
+                                              Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            <ui:ToggleSwitch Grid.Column="1" AutomationProperties.Name="Click variation"
+                                             OnContent="On" OffContent="Off"
+                                             IsChecked="{Binding EnableHumanizer, Mode=TwoWay}" VerticalAlignment="Center" />
+                        </Grid>
+
+                        <Grid Margin="0,12,0,0" IsVisibleChanged="OnVariationOptionsVisibilityChanged">
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding EnableHumanizer}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Margin="0,0,8,0">
+                                <ui:TextBlock Text="Timing variation" FontTypography="Caption" />
+                                <Slider Minimum="1" Maximum="50" Value="{Binding HumanizerJitterMs, Mode=TwoWay}" Margin="0,4,0,0" />
+                                <ui:TextBlock Text="{Binding HumanizerJitterMs, StringFormat='± {0:F1} ms'}" FontTypography="Caption" HorizontalAlignment="Right" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                <ui:TextBlock Text="Position radius" FontTypography="Caption" />
+                                <Slider Minimum="0" Maximum="15" Value="{Binding HumanizerRadiusPx, Mode=TwoWay}" Margin="0,4,0,0" />
+                                <ui:TextBlock Text="{Binding HumanizerRadiusPx, StringFormat='± {0} px'}" FontTypography="Caption" HorizontalAlignment="Right" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FlowClicker/FlowClicker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FlowClicker.Tests/FlowClicker.Tests.csproj" />
+  </Folder>
+</Solution>

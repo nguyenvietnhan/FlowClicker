@@ -1,0 +1,208 @@
+<UserControl x:Class="FlowClicker.UI.Views.MouseToolsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:services="clr-namespace:FlowClicker.Core.Services"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="800">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,16,24,12">
+        <StackPanel>
+            <TextBlock Text="Mouse Tools" Style="{StaticResource PageHeading}" />
+            <TextBlock Text="Pointer and scrolling" Style="{StaticResource SectionHeading}" />
+
+            <!-- 1. Auto-Scroll Tool Card -->
+            <Border Style="{StaticResource SectionCard}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <ui:FontIcon Style="{StaticResource WindowsIcon}" Glyph="&#xE8CB;" FontSize="20" Margin="0,0,8,0" />
+                            <ui:TextBlock Text="Auto-scroll" FontTypography="BodyStrong" VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <Grid Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Margin="0,0,12,0">
+                                <ui:TextBlock Text="Direction" FontTypography="Caption" />
+                                <ComboBox SelectedValue="{Binding ScrollDirection, Mode=TwoWay}"
+                                          SelectedValuePath="Tag"
+                                          Margin="0,6,0,0"
+                                          HorizontalAlignment="Stretch">
+                                    <ComboBoxItem Content="Down" Tag="{x:Static services:ScrollDirection.Down}" IsSelected="True" />
+                                    <ComboBoxItem Content="Up" Tag="{x:Static services:ScrollDirection.Up}" />
+                                    <ComboBoxItem Content="Right" Tag="{x:Static services:ScrollDirection.Right}" />
+                                    <ComboBoxItem Content="Left" Tag="{x:Static services:ScrollDirection.Left}" />
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                <ui:TextBlock Text="Lines per second" FontTypography="Caption" />
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="60" />
+                                    </Grid.ColumnDefinitions>
+                                    <Slider Minimum="1" Maximum="100" Value="{Binding ScrollSpeed, Mode=TwoWay}" VerticalAlignment="Center" />
+                                    <ui:TextBlock Grid.Column="1" Text="{Binding ScrollSpeed}" FontTypography="Caption" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                </Grid>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Start/Stop Auto-Scroll Button -->
+                    <ui:Button Grid.Column="1"
+                               Command="{Binding ToggleAutoScrollCommand}"
+                               Width="130"
+                               Height="38"
+                               CornerRadius="4"
+                               Margin="16,0,0,0"
+                               VerticalAlignment="Center">
+                        <ui:Button.Style>
+                            <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                                <Setter Property="Appearance" Value="Primary" />
+                                <Setter Property="Content" Value="Start scroll" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsAutoScrollRunning}" Value="True">
+                                        <Setter Property="Appearance" Value="Danger" />
+                                        <Setter Property="Content" Value="Stop scroll" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:Button.Style>
+                    </ui:Button>
+                </Grid>
+            </Border>
+
+            <!-- 2. Mouse Jiggler Card -->
+            <Border Style="{StaticResource SectionCard}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <ui:FontIcon Style="{StaticResource WindowsIcon}" Glyph="&#xE962;" FontSize="20" Margin="0,0,8,0" />
+                            <ui:TextBlock Text="Mouse jiggler" FontTypography="BodyStrong" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <ui:TextBlock Text="Moves the pointer at the selected interval." TextWrapping="Wrap"
+                                      FontTypography="Caption"
+                                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                      Margin="0,0,0,12" />
+
+                        <Grid Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Margin="0,0,12,0">
+                                <ui:TextBlock Text="Movement" FontTypography="Caption" />
+                                <ComboBox SelectedValue="{Binding JigglerMode, Mode=TwoWay}"
+                                          SelectedValuePath="Tag"
+                                          Margin="0,6,0,0"
+                                          HorizontalAlignment="Stretch">
+                                    <ComboBoxItem Content="Smooth curve" Tag="{x:Static services:JigglerMode.Lissajous}" IsSelected="True" />
+                                    <ComboBoxItem Content="1-pixel nudge" Tag="{x:Static services:JigglerMode.MicroNudge}" />
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                <ui:TextBlock Text="Interval" FontTypography="Caption" />
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="60" />
+                                    </Grid.ColumnDefinitions>
+                                    <Slider Minimum="2" Maximum="120" Value="{Binding JigglerInterval, Mode=TwoWay}" VerticalAlignment="Center" />
+                                    <ui:TextBlock Grid.Column="1" Text="{Binding JigglerInterval, StringFormat='{}{0}s'}" FontTypography="Caption" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                </Grid>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Start/Stop jiggler Button -->
+                    <ui:Button Grid.Column="1"
+                               Command="{Binding ToggleJigglerCommand}"
+                               Width="130"
+                               Height="38"
+                               CornerRadius="4"
+                               Margin="16,0,0,0"
+                               VerticalAlignment="Center">
+                        <ui:Button.Style>
+                            <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                                <Setter Property="Appearance" Value="Primary" />
+                                <Setter Property="Content" Value="Start jiggler" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsJigglerRunning}" Value="True">
+                                        <Setter Property="Appearance" Value="Danger" />
+                                        <Setter Property="Content" Value="Stop jiggler" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:Button.Style>
+                    </ui:Button>
+                </Grid>
+            </Border>
+
+            <TextBlock Text="Mouse buttons" Style="{StaticResource SectionHeading}" Margin="0,12,0,8" />
+            <Border Style="{StaticResource SectionCard}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <ui:FontIcon Style="{StaticResource WindowsIcon}" Glyph="&#xE72E;" FontSize="20" Margin="0,0,8,0" />
+                            <ui:TextBlock Text="Hold a mouse button" FontTypography="BodyStrong" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <ui:TextBlock Text="Press Shift + Esc to release." TextWrapping="Wrap"
+                                      FontTypography="Caption"
+                                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                      Margin="0,0,0,12" />
+
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <RadioButton Content="Left button" IsChecked="{Binding HoldLockIsLeftButton, Mode=TwoWay}" Margin="0,0,24,0" />
+                            <RadioButton Content="Right button" IsChecked="{Binding HoldLockIsLeftButton, Mode=TwoWay, Converter={StaticResource InverseBooleanConverter}}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Toggle Hold Lock Button -->
+                    <ui:Button Grid.Column="1"
+                               Command="{Binding ToggleHoldLockCommand}"
+                               Width="130"
+                               Height="38"
+                               CornerRadius="4"
+                               Margin="16,0,0,0"
+                               VerticalAlignment="Center">
+                        <ui:Button.Style>
+                            <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                                <Setter Property="Appearance" Value="Primary" />
+                                <Setter Property="Content" Value="Hold button" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsHoldLockActive}" Value="True">
+                                        <Setter Property="Appearance" Value="Danger" />
+                                        <Setter Property="Content" Value="Release button" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:Button.Style>
+                    </ui:Button>
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,42 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="FlowClicker" Manufacturer="FlowClicker" Version="1.0.3"
+           Scope="perUser" UpgradeCode="9B21C36E-E5E7-428A-8CAB-9CD4E8A94DF4">
+    <MajorUpgrade DowngradeErrorMessage="A newer version of FlowClicker is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+    <Icon Id="FlowClickerIcon" SourceFile="src\FlowClicker\Assets\FlowClicker.ico" />
+    <Property Id="ARPPRODUCTICON" Value="FlowClickerIcon" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="ProgramsFolder" Name="Programs">
+        <Directory Id="INSTALLFOLDER" Name="FlowClicker">
+          <Component Id="ApplicationFiles" Guid="5FD42CEF-1949-45B9-8070-5998F346478C">
+            <File Id="FlowClickerExe" Source="dist\FlowClicker-win-x64\FlowClicker.exe" KeyPath="yes" />
+          </Component>
+          <Component Id="ThirdPartyNotices" Guid="11B361F6-E89F-4508-93FA-B66869211D6B">
+            <File Id="ThirdPartyNoticesFile" Source="dist\FlowClicker-win-x64\THIRD-PARTY-NOTICES.txt" KeyPath="yes" />
+          </Component>
+          <Component Id="ProjectLicense" Guid="367D7CAF-00BC-4379-B900-D994456EF588">
+            <File Id="ProjectLicenseFile" Source="LICENSE" KeyPath="yes" />
+          </Component>
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Component Id="StartMenuShortcut" Guid="43F1265C-272C-4A9A-8B63-5FD384CCFB9F">
+        <Shortcut Id="FlowClickerShortcut" Name="FlowClicker" Target="[#FlowClickerExe]"
+                  WorkingDirectory="INSTALLFOLDER" Icon="FlowClickerIcon" />
+        <RegistryValue Root="HKCU" Key="Software\FlowClicker\Installer" Name="StartMenuShortcut"
+                       Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </StandardDirectory>
+
+    <Feature Id="FlowClicker" Title="FlowClicker">
+      <ComponentRef Id="ApplicationFiles" />
+      <ComponentRef Id="ThirdPartyNotices" />
+      <ComponentRef Id="ProjectLicense" />
+      <ComponentRef Id="StartMenuShortcut" />
+    </Feature>
+  </Package>
+</Wix>

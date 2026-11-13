@@ -1,0 +1,134 @@
+<UserControl x:Class="FlowClicker.UI.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="800">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,16,24,12">
+        <StackPanel>
+            <TextBlock Text="Settings" Style="{StaticResource PageHeading}" />
+
+            <TextBlock Text="Appearance and window" Style="{StaticResource SectionHeading}" />
+            <ui:CardControl Style="{StaticResource SettingsRow}">
+                <ui:CardControl.Icon>
+                    <ui:FontIcon Style="{StaticResource WindowsIcon}" Glyph="&#xE771;" FontSize="20" />
+                </ui:CardControl.Icon>
+                <ui:CardControl.Header>
+                    <StackPanel>
+                        <ui:TextBlock Text="App theme" FontTypography="BodyStrong" />
+                        <ui:TextBlock Text="Choose how FlowClicker looks." FontTypography="Caption"
+                                      Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </ui:CardControl.Header>
+                <ComboBox SelectedValue="{Binding SelectedTheme, Mode=TwoWay}"
+                          SelectedValuePath="Tag" Width="164" AutomationProperties.Name="App theme">
+                    <ComboBoxItem Content="Use system setting" Tag="System" />
+                    <ComboBoxItem Content="Light" Tag="Light" />
+                    <ComboBoxItem Content="Dark" Tag="Dark" />
+                </ComboBox>
+            </ui:CardControl>
+
+            <ui:CardControl Style="{StaticResource SettingsRow}">
+                <ui:CardControl.Icon>
+                    <ui:FontIcon Style="{StaticResource WindowsIcon}" Glyph="&#xE718;" FontSize="20" />
+                </ui:CardControl.Icon>
+                <ui:CardControl.Header>
+                    <StackPanel>
+                        <ui:TextBlock Text="Always on top" FontTypography="BodyStrong" />
+                        <ui:TextBlock Text="Keep FlowClicker above other windows." FontTypography="Caption"
+                                      Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </ui:CardControl.Header>
+                <ui:ToggleSwitch IsChecked="{Binding IsAlwaysOnTop, Mode=TwoWay}"
+                                 OnContent="On" OffContent="Off" AutomationProperties.Name="Always on top" />
+            </ui:CardControl>
+
+            <TextBlock Text="Keyboard shortcuts" Style="{StaticResource SectionHeading}" Margin="0,16,0,8" />
+            <Border Style="{StaticResource SectionCard}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <ui:TextBlock Text="Start or stop Auto Clicker" VerticalAlignment="Center" Margin="0,6" />
+                    <Border Grid.Column="1" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="4" Padding="10,4" Margin="0,6">
+                        <ui:TextBlock Text="{Binding HotkeyStartStop}" FontWeight="SemiBold" />
+                    </Border>
+
+                    <ui:TextBlock Grid.Row="1" Text="Stop all actions and release buttons" VerticalAlignment="Center" Margin="0,6" />
+                    <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="4" Padding="10,4" Margin="0,6">
+                        <ui:TextBlock Text="{Binding HotkeyPanic}" FontWeight="SemiBold" Foreground="{DynamicResource SystemFillColorCautionBrush}" />
+                    </Border>
+
+                    <ui:TextBlock Grid.Row="2" Text="Pick coordinates" VerticalAlignment="Center" Margin="0,6" />
+                    <Border Grid.Row="2" Grid.Column="1" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="4" Padding="10,4" Margin="0,6">
+                        <ui:TextBlock Text="{Binding HotkeyPick}" FontWeight="SemiBold" />
+                    </Border>
+                </Grid>
+            </Border>
+
+            <TextBlock Text="Permissions" Style="{StaticResource SectionHeading}" Margin="0,12,0,8" />
+            <Border Style="{StaticResource SectionCard}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:TextBlock Text="Run as administrator" FontTypography="BodyStrong" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <Border CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#22888888" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsAdministrator}" Value="True">
+                                                <Setter Property="Background" Value="#266CCB5F" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock FontWeight="SemiBold" FontSize="11">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="Standard user" />
+                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsAdministrator}" Value="True">
+                                                    <Setter Property="Text" Value="Administrator" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                        </StackPanel>
+                        <ui:TextBlock Text="Allows FlowClicker to click in other elevated apps." TextWrapping="Wrap"
+                                      FontTypography="Caption"
+                                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                      Margin="0,4,0,0" />
+                    </StackPanel>
+
+                    <ui:Button Grid.Column="1"
+                               Command="{Binding RestartAsAdminCommand}"
+                               Content="Restart as administrator"
+                               Appearance="Secondary"
+                               CornerRadius="4"
+                               VerticalAlignment="Center"
+                               Margin="16,0,0,0"
+                               IsEnabled="{Binding IsAdministrator, Converter={StaticResource InverseBooleanConverter}}" />
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

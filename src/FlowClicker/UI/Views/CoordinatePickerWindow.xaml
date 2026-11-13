@@ -1,0 +1,36 @@
+<Window x:Class="FlowClicker.UI.Views.CoordinatePickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Coordinate Picker"
+        AllowsTransparency="True"
+        WindowStyle="None"
+        Background="#01000000"
+        WindowState="Maximized"
+        Topmost="True"
+        Cursor="Cross"
+        KeyDown="OnKeyDown"
+        MouseDown="OnMouseDown"
+        MouseMove="OnMouseMove">
+    <Canvas x:Name="OverlayCanvas">
+        <Border x:Name="CoordBadge"
+                Background="#CC000000"
+                CornerRadius="6"
+                Padding="10,6"
+                BorderBrush="#44FFFFFF"
+                BorderThickness="1">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock x:Name="CoordText"
+                           Text="X: 0, Y: 0"
+                           Foreground="#FFFFFF"
+                           FontFamily="Segoe UI Variable Text"
+                           FontSize="13"
+                           FontWeight="SemiBold"/>
+                <TextBlock Text=" (Click or Enter to select, Esc to cancel)"
+                           Foreground="#AAAAAA"
+                           FontFamily="Segoe UI Variable Text"
+                           FontSize="11"
+                           Margin="6,1,0,0"/>
+            </StackPanel>
+        </Border>
+    </Canvas>
+</Window>
