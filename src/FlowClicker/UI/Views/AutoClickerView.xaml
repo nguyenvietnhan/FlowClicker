@@ -13,7 +13,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <StackPanel Margin="24,16,24,16">
-            <TextBlock Text="Auto Clicker" Style="{StaticResource PageHeading}" />
+            <TextBlock Text="Auto Clicker" Style="{StaticResource PageHeading}" Margin="0,0,0,16" />
             <Border Style="{StaticResource SectionCard}" Margin="0">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -34,7 +34,10 @@
                                 </Style>
                             </ui:TextBlock.Style>
                         </ui:TextBlock>
-                        <TextBlock Style="{StaticResource RunStatus}" Margin="0,2,0,0" />
+                        <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                            <Ellipse Style="{StaticResource RunStatusDot}" />
+                            <TextBlock Style="{StaticResource RunStatus}" />
+                        </StackPanel>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal"
                                 VerticalAlignment="Center" Margin="0,0,20,0">
@@ -77,9 +80,15 @@
                         IsClosable="False"
                         Severity="Error"
                         Margin="0,8,0,0" />
+            <ui:InfoBar Title="Hold mode active"
+                        Message="Presses the selected button once and keeps it held until stopped (F6 or Shift+Esc). Timing, repeat, and variation are paused in this mode."
+                        IsOpen="{Binding IsHoldMode}"
+                        IsClosable="False"
+                        Severity="Informational"
+                        Margin="0,8,0,0" />
         </StackPanel>
 
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="24,0,24,12"
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="24,0,24,24"
                       IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBooleanConverter}}">
             <StackPanel>
                 <TextBlock Text="Timing" Style="{StaticResource SectionHeading}" />
@@ -106,7 +115,8 @@
                                           Minimum="0.0001"
                                           Maximum="2000"
                                           MaxDecimalPlaces="4"
-                                          Width="130"
+                                          SpinButtonPlacementMode="Compact"
+                                          Width="136"
                                           VerticalAlignment="Center" />
                         </Grid>
 
@@ -130,6 +140,7 @@
                                               Minimum="0"
                                               Maximum="24"
                                               MaxDecimalPlaces="0"
+                                              SpinButtonPlacementMode="Compact"
                                               Margin="0,4,0,0" />
                             </StackPanel>
 
@@ -138,6 +149,7 @@
                                 <ui:NumberBox Value="{Binding Minutes, Mode=TwoWay, Converter={StaticResource NumberValueConverter}, ConverterParameter=0}"
                                               Minimum="0"
                                               MaxDecimalPlaces="0"
+                                              SpinButtonPlacementMode="Compact"
                                               Margin="0,4,0,0" />
                             </StackPanel>
 
@@ -146,6 +158,7 @@
                                 <ui:NumberBox Value="{Binding Seconds, Mode=TwoWay, Converter={StaticResource NumberValueConverter}, ConverterParameter=0}"
                                               Minimum="0"
                                               MaxDecimalPlaces="0"
+                                              SpinButtonPlacementMode="Compact"
                                               Margin="0,4,0,0" />
                             </StackPanel>
 
@@ -154,6 +167,7 @@
                                 <ui:NumberBox Value="{Binding Milliseconds, Mode=TwoWay, Converter={StaticResource NumberValueConverter}, ConverterParameter=0}"
                                               Minimum="0"
                                               MaxDecimalPlaces="1"
+                                              SpinButtonPlacementMode="Compact"
                                               Margin="0,4,0,0" />
                             </StackPanel>
                         </Grid>
@@ -223,17 +237,21 @@
                             <ui:NumberBox Grid.Column="1"
                                           Value="{Binding FixedX, Mode=TwoWay, Converter={StaticResource NumberValueConverter}, ConverterParameter=0}"
                                           MaxDecimalPlaces="0"
+                                          SpinButtonPlacementMode="Compact"
                                           IsEnabled="{Binding IsCurrentCursor, Converter={StaticResource InverseBooleanConverter}}" />
 
                             <ui:TextBlock Grid.Column="2" Text="Y" VerticalAlignment="Center" Margin="16,0,8,0" />
                             <ui:NumberBox Grid.Column="3"
                                           Value="{Binding FixedY, Mode=TwoWay, Converter={StaticResource NumberValueConverter}, ConverterParameter=0}"
                                           MaxDecimalPlaces="0"
+                                          SpinButtonPlacementMode="Compact"
                                           IsEnabled="{Binding IsCurrentCursor, Converter={StaticResource InverseBooleanConverter}}" />
 
                             <ui:Button Grid.Column="4"
                                        Command="{Binding PickCoordinatesCommand}"
                                        Content="Pick location (F7)"
+                                       Appearance="Secondary"
+                                       Icon="{ui:FontIcon '&#xF272;', FontFamily='Segoe Fluent Icons, Segoe MDL2 Assets', FontSize=15}"
                                        Margin="16,0,0,0"
                                        CornerRadius="4" />
                         </Grid>
@@ -262,7 +280,8 @@
                             <ui:NumberBox Value="{Binding RepeatTimes, Mode=TwoWay, Converter={StaticResource NumberValueConverter}, ConverterParameter=1}"
                                           Minimum="1"
                                           MaxDecimalPlaces="0"
-                                          Width="110" />
+                                          SpinButtonPlacementMode="Compact"
+                                          Width="116" />
                             <ui:TextBlock Text="clicks" FontTypography="Caption"
                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                           VerticalAlignment="Center" Margin="8,0,0,0" />

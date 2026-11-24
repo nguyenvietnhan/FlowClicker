@@ -42,6 +42,21 @@
                 <Setter Property="Margin" Value="0,0,0,8" />
                 <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
             </Style>
+            <Style x:Key="RunStatusDot" TargetType="Ellipse">
+                <Setter Property="Width" Value="7" />
+                <Setter Property="Height" Value="7" />
+                <Setter Property="Margin" Value="0,1,6,0" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Fill" Value="{DynamicResource TextFillColorTertiaryBrush}" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                        <Setter Property="Fill" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding InputFailed}" Value="True">
+                        <Setter Property="Fill" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
             <Style x:Key="RunStatus" TargetType="TextBlock">
                 <Setter Property="Text" Value="Ready" />
                 <Setter Property="FontSize" Value="12" />

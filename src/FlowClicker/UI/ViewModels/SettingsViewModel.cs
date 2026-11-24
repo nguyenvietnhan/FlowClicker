@@ -52,6 +52,9 @@ namespace FlowClicker.UI.ViewModels
         [ObservableProperty]
         private string _adminErrorMessage = string.Empty;
 
+        public string AppVersion =>
+            $"v{typeof(SettingsViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.0.5"}";
+
         public event EventHandler? StopWorkersRequested;
 
         public SettingsViewModel(SettingsPersistenceService? persistence = null)

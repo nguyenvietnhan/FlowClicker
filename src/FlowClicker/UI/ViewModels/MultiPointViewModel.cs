@@ -24,10 +24,20 @@ namespace FlowClicker.UI.ViewModels
         private ObservableCollection<SequenceActionPoint> _points = new();
 
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(RemovePointCommand))]
+        [NotifyCanExecuteChangedFor(nameof(MoveUpCommand))]
+        [NotifyCanExecuteChangedFor(nameof(MoveDownCommand))]
         private SequenceActionPoint? _selectedPoint;
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(DisplayStep))]
+        [NotifyCanExecuteChangedFor(nameof(PickAndAddPointCommand))]
+        [NotifyCanExecuteChangedFor(nameof(AddPointCommand))]
+        [NotifyCanExecuteChangedFor(nameof(RemovePointCommand))]
+        [NotifyCanExecuteChangedFor(nameof(MoveUpCommand))]
+        [NotifyCanExecuteChangedFor(nameof(MoveDownCommand))]
+        [NotifyCanExecuteChangedFor(nameof(ClearCommand))]
+        [NotifyCanExecuteChangedFor(nameof(ToggleSequenceCommand))]
         private bool _isRunning;
 
         [ObservableProperty]
@@ -45,6 +55,8 @@ namespace FlowClicker.UI.ViewModels
 
         [ObservableProperty]
         private string _failureMessage = string.Empty;
+
+        public bool HasNoPoints => Points.Count == 0;
 
         public string DisplayStep => IsRunning && Points.Count > 0
             ? $"{Math.Clamp(CurrentStepIndex + 1, 1, Points.Count)} / {Points.Count}"
@@ -111,6 +123,11 @@ namespace FlowClicker.UI.ViewModels
                     item.PropertyChanged += OnPointPropertyChanged;
             }
             OnPropertyChanged(nameof(DisplayStep));
+            OnPropertyChanged(nameof(HasNoPoints));
+            ClearCommand.NotifyCanExecuteChanged();
+            ToggleSequenceCommand.NotifyCanExecuteChanged();
+            MoveUpCommand.NotifyCanExecuteChanged();
+            MoveDownCommand.NotifyCanExecuteChanged();
             Persist();
         }
 
@@ -172,7 +189,19 @@ namespace FlowClicker.UI.ViewModels
                 item.PropertyChanged -= OnPointPropertyChanged;
         }
 
-        [RelayCommand]
+        private bool CanEditPoints() => !IsRunning;
+        private bool CanRemoveSelected() => !IsRunning && SelectedPoint != null;
+        private bool CanMoveUp() => !IsRunning && SelectedPoint != null && Points.IndexOf(SelectedPoint) > 0;
+        private bool CanMoveDown()
+        {
+            if (IsRunning || SelectedPoint == null) return false;
+            int idx = Points.IndexOf(SelectedPoint);
+            return idx >= 0 && idx < Points.Count - 1;
+        }
+        private bool CanClearPoints() => !IsRunning && Points.Count > 0;
+        private bool CanToggleSequence() => IsRunning || Points.Count > 0;
+
+        [RelayCommand(CanExecute = nameof(CanEditPoints))]
         public void AddPoint()
         {
             if (_sequenceEngine.IsRunning) return;
@@ -190,7 +219,7 @@ namespace FlowClicker.UI.ViewModels
             SelectedPoint = pt;
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanEditPoints))]
         public void PickAndAddPoint()
         {
             if (_sequenceEngine.IsRunning) return;
@@ -211,7 +240,7 @@ namespace FlowClicker.UI.ViewModels
             });
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanRemoveSelected))]
         public void RemovePoint()
         {
             if (_sequenceEngine.IsRunning || SelectedPoint == null) return;
@@ -219,7 +248,7 @@ namespace FlowClicker.UI.ViewModels
             ReorderPoints();
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanMoveUp))]
         public void MoveUp()
         {
             if (_sequenceEngine.IsRunning || SelectedPoint == null) return;
@@ -228,10 +257,12 @@ namespace FlowClicker.UI.ViewModels
             {
                 Points.Move(idx, idx - 1);
                 ReorderPoints();
+                MoveUpCommand.NotifyCanExecuteChanged();
+                MoveDownCommand.NotifyCanExecuteChanged();
             }
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanMoveDown))]
         public void MoveDown()
         {
             if (_sequenceEngine.IsRunning || SelectedPoint == null) return;
@@ -240,17 +271,19 @@ namespace FlowClicker.UI.ViewModels
             {
                 Points.Move(idx, idx + 1);
                 ReorderPoints();
+                MoveUpCommand.NotifyCanExecuteChanged();
+                MoveDownCommand.NotifyCanExecuteChanged();
             }
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanClearPoints))]
         public void Clear()
         {
             if (_sequenceEngine.IsRunning) return;
             Points.Clear();
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanToggleSequence))]
         public void ToggleSequence()
         {
             if (_sequenceEngine.IsRunning)

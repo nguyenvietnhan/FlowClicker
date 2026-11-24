@@ -34,8 +34,11 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="Multi-Point" Style="{StaticResource PageHeading}" Margin="0" />
-                <TextBlock Style="{StaticResource RunStatus}" />
+                <TextBlock Text="Multi-Point" Style="{StaticResource PageHeading}" Margin="0,0,0,4" />
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Style="{StaticResource RunStatusDot}" />
+                    <TextBlock Style="{StaticResource RunStatus}" />
+                </StackPanel>
             </StackPanel>
             <ui:Button Grid.Column="1"
                        Command="{Binding ToggleSequenceCommand}"
@@ -133,6 +136,8 @@
                 <DataGrid Grid.Row="1"
                           ItemsSource="{Binding Points}"
                           SelectedItem="{Binding SelectedPoint, Mode=TwoWay}"
+                          SelectionMode="Single"
+                          SelectionUnit="FullRow"
                           IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBooleanConverter}}"
                           AutoGenerateColumns="False"
                           CanUserAddRows="False"
@@ -140,6 +145,7 @@
                           CanUserSortColumns="False"
                           GridLinesVisibility="Horizontal"
                           HeadersVisibility="Column"
+                          ColumnHeaderHeight="36"
                           CanUserResizeColumns="True"
                           Loaded="OnPointsGridLoaded"
                           RowHeight="36"
@@ -170,6 +176,27 @@
                         </DataGridTextColumn>
                     </DataGrid.Columns>
                 </DataGrid>
+
+                <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasNoPoints}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <ui:FontIcon Style="{StaticResource WindowsIcon}" Glyph="&#xF272;" FontSize="24"
+                                 Foreground="{DynamicResource TextFillColorTertiaryBrush}" Margin="0,0,0,8" />
+                    <ui:TextBlock Text="No sequence steps yet" FontTypography="BodyStrong"
+                                  HorizontalAlignment="Center"
+                                  Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    <ui:TextBlock Text="Use Pick point (F7) or Add step above to create a click sequence."
+                                  FontTypography="Caption" HorizontalAlignment="Center" Margin="0,2,0,0"
+                                  Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -187,7 +214,8 @@
                     <ui:NumberBox Value="{Binding RepeatCount, Mode=TwoWay, Converter={StaticResource NumberValueConverter}, ConverterParameter=0}"
                                   Minimum="0"
                                   MaxDecimalPlaces="0"
-                                  Width="90"
+                                  SpinButtonPlacementMode="Compact"
+                                  Width="96"
                                   Margin="0,0,8,0" />
                     <ui:TextBlock Text="0 = continuous" FontTypography="Caption" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
                 </StackPanel>

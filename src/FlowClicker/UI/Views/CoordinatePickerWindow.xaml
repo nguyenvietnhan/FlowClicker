@@ -17,12 +17,16 @@
         <Border x:Name="CoordBadge"
                 Visibility="Collapsed"
                 IsHitTestVisible="False"
-                Background="#CC000000"
+                Background="#DC111418"
                 CornerRadius="6"
                 Padding="10,6"
-                BorderBrush="#44FFFFFF"
+                BorderBrush="#66FFFFFF"
                 BorderThickness="1">
-            <StackPanel Orientation="Horizontal">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.45" Color="#000000" />
+            </Border.Effect>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Ellipse Width="7" Height="7" Fill="#3B82F6" Margin="0,0,8,0" VerticalAlignment="Center" />
                 <TextBlock x:Name="CoordText"
                            Text="X: 0, Y: 0"
                            Foreground="#FFFFFF"
@@ -30,7 +34,7 @@
                            FontSize="13"
                            FontWeight="SemiBold"/>
                 <TextBlock Text=" (Click, Enter, or F7 to select, Esc to cancel)"
-                           Foreground="#AAAAAA"
+                           Foreground="#C4C9D4"
                            FontFamily="Segoe UI Variable Text"
                            FontSize="11"
                            Margin="6,1,0,0"/>

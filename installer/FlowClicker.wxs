@@ -1,6 +1,6 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
-  <Package Name="FlowClicker" Manufacturer="FlowClicker" Version="1.0.4"
+  <Package Name="FlowClicker" Manufacturer="FlowClicker" Version="1.0.5"
            Scope="perUser" UpgradeCode="9B21C36E-E5E7-428A-8CAB-9CD4E8A94DF4">
     <MajorUpgrade DowngradeErrorMessage="A newer version of FlowClicker is already installed." />
     <MediaTemplate EmbedCab="yes" />

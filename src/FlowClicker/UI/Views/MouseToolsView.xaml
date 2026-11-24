@@ -8,7 +8,7 @@
              xmlns:models="clr-namespace:FlowClicker.Core.Services.Models"
              mc:Ignorable="d" 
              d:DesignHeight="700" d:DesignWidth="800">
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,16,24,12">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,16,24,24">
         <StackPanel>
             <TextBlock Text="Mouse Tools" Style="{StaticResource PageHeading}" />
             <ui:InfoBar Title="Mouse tool action failed"
@@ -30,7 +30,33 @@
                     <StackPanel IsEnabled="{Binding IsAutoScrollRunning, Converter={StaticResource InverseBooleanConverter}}">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <ui:FontIcon Style="{StaticResource WindowsIcon}" Glyph="&#xE8CB;" FontSize="20" Margin="0,0,8,0" />
-                            <ui:TextBlock Text="Auto-scroll" FontTypography="BodyStrong" VerticalAlignment="Center" />
+                            <ui:TextBlock Text="Auto-scroll" FontTypography="BodyStrong" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <Border CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#22888888" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsAutoScrollRunning}" Value="True">
+                                                <Setter Property="Background" Value="#266CCB5F" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock FontWeight="SemiBold" FontSize="11">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="Idle" />
+                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsAutoScrollRunning}" Value="True">
+                                                    <Setter Property="Text" Value="Scrolling" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
                         </StackPanel>
 
                         <Grid Margin="0,4,0,0">
@@ -69,7 +95,7 @@
                     <!-- Start/Stop Auto-Scroll Button -->
                     <ui:Button Grid.Column="1"
                                Command="{Binding ToggleAutoScrollCommand}"
-                               Width="130"
+                               Width="140"
                                Height="38"
                                CornerRadius="4"
                                Margin="16,0,0,0"
@@ -78,10 +104,12 @@
                             <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
                                 <Setter Property="Appearance" Value="Primary" />
                                 <Setter Property="Content" Value="Start scroll" />
+                                <Setter Property="Icon" Value="{ui:FontIcon '&#xE768;', FontFamily='Segoe Fluent Icons, Segoe MDL2 Assets', FontSize=15}" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsAutoScrollRunning}" Value="True">
                                         <Setter Property="Appearance" Value="Danger" />
                                         <Setter Property="Content" Value="Stop scroll" />
+                                        <Setter Property="Icon" Value="{ui:FontIcon '&#xE71A;', FontFamily='Segoe Fluent Icons, Segoe MDL2 Assets', FontSize=15}" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -101,7 +129,33 @@
                     <StackPanel IsEnabled="{Binding IsJigglerRunning, Converter={StaticResource InverseBooleanConverter}}">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <ui:FontIcon Style="{StaticResource WindowsIcon}" Glyph="&#xE962;" FontSize="20" Margin="0,0,8,0" />
-                            <ui:TextBlock Text="Mouse jiggler" FontTypography="BodyStrong" VerticalAlignment="Center" />
+                            <ui:TextBlock Text="Mouse jiggler" FontTypography="BodyStrong" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <Border CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#22888888" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsJigglerRunning}" Value="True">
+                                                <Setter Property="Background" Value="#266CCB5F" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock FontWeight="SemiBold" FontSize="11">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="Idle" />
+                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsJigglerRunning}" Value="True">
+                                                    <Setter Property="Text" Value="Active" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
                         </StackPanel>
                         <ui:TextBlock Text="Moves the pointer at the selected interval." TextWrapping="Wrap"
                                       FontTypography="Caption"
@@ -142,7 +196,7 @@
                     <!-- Start/Stop jiggler Button -->
                     <ui:Button Grid.Column="1"
                                Command="{Binding ToggleJigglerCommand}"
-                               Width="130"
+                               Width="140"
                                Height="38"
                                CornerRadius="4"
                                Margin="16,0,0,0"
@@ -151,10 +205,12 @@
                             <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
                                 <Setter Property="Appearance" Value="Primary" />
                                 <Setter Property="Content" Value="Start jiggler" />
+                                <Setter Property="Icon" Value="{ui:FontIcon '&#xE768;', FontFamily='Segoe Fluent Icons, Segoe MDL2 Assets', FontSize=15}" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsJigglerRunning}" Value="True">
                                         <Setter Property="Appearance" Value="Danger" />
                                         <Setter Property="Content" Value="Stop jiggler" />
+                                        <Setter Property="Icon" Value="{ui:FontIcon '&#xE71A;', FontFamily='Segoe Fluent Icons, Segoe MDL2 Assets', FontSize=15}" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -174,7 +230,33 @@
                     <StackPanel IsEnabled="{Binding IsHoldLockActive, Converter={StaticResource InverseBooleanConverter}}">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <ui:FontIcon Style="{StaticResource WindowsIcon}" Glyph="&#xE72E;" FontSize="20" Margin="0,0,8,0" />
-                            <ui:TextBlock Text="Hold a mouse button" FontTypography="BodyStrong" VerticalAlignment="Center" />
+                            <ui:TextBlock Text="Hold a mouse button" FontTypography="BodyStrong" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <Border CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#22888888" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsHoldLockActive}" Value="True">
+                                                <Setter Property="Background" Value="#266CCB5F" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock FontWeight="SemiBold" FontSize="11">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="Released" />
+                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsHoldLockActive}" Value="True">
+                                                    <Setter Property="Text" Value="Holding" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
                         </StackPanel>
                         <ui:TextBlock Text="Press Shift + Esc to release." TextWrapping="Wrap"
                                       FontTypography="Caption"
@@ -197,7 +279,7 @@
                     <!-- Toggle Hold Lock Button -->
                     <ui:Button Grid.Column="1"
                                Command="{Binding ToggleHoldLockCommand}"
-                               Width="130"
+                               Width="140"
                                Height="38"
                                CornerRadius="4"
                                Margin="16,0,0,0"
@@ -206,10 +288,12 @@
                             <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
                                 <Setter Property="Appearance" Value="Primary" />
                                 <Setter Property="Content" Value="Hold button" />
+                                <Setter Property="Icon" Value="{ui:FontIcon '&#xE72E;', FontFamily='Segoe Fluent Icons, Segoe MDL2 Assets', FontSize=15}" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsHoldLockActive}" Value="True">
                                         <Setter Property="Appearance" Value="Danger" />
                                         <Setter Property="Content" Value="Release button" />
+                                        <Setter Property="Icon" Value="{ui:FontIcon '&#xE785;', FontFamily='Segoe Fluent Icons, Segoe MDL2 Assets', FontSize=15}" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>

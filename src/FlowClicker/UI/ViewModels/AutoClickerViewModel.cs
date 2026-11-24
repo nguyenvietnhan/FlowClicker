@@ -51,6 +51,7 @@ namespace FlowClicker.UI.ViewModels
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsNotHoldMode))]
+        [NotifyPropertyChangedFor(nameof(IsHoldMode))]
         private ClickType _selectedClickType = ClickType.Single;
 
         [ObservableProperty]
@@ -87,6 +88,7 @@ namespace FlowClicker.UI.ViewModels
         private TimerEngineMode _engineMode = TimerEngineMode.Eco;
 
         public bool IsNotHoldMode => SelectedClickType != ClickType.Hold;
+        public bool IsHoldMode => SelectedClickType == ClickType.Hold;
 
         public double SliderCps
         {

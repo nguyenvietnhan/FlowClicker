@@ -6,7 +6,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" 
              d:DesignHeight="700" d:DesignWidth="800">
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,16,24,12">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,16,24,24">
         <StackPanel>
             <TextBlock Text="Settings" Style="{StaticResource PageHeading}" />
 
@@ -60,22 +60,30 @@
                     </Grid.ColumnDefinitions>
 
                     <ui:TextBlock Text="Start or stop Auto Clicker" VerticalAlignment="Center" Margin="0,6" />
-                    <Border Grid.Column="1" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="4" Padding="10,4" Margin="0,6">
+                    <Border Grid.Column="1" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="4" Padding="10,4" Margin="0,6">
                         <ui:TextBlock Text="{Binding HotkeyStartStop}" FontWeight="SemiBold" />
                     </Border>
 
                     <ui:TextBlock Grid.Row="1" Text="Stop all actions and release buttons" VerticalAlignment="Center" Margin="0,6" />
-                    <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="4" Padding="10,4" Margin="0,6">
+                    <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="4" Padding="10,4" Margin="0,6">
                         <ui:TextBlock Text="{Binding HotkeyPanic}" FontWeight="SemiBold" Foreground="{DynamicResource SystemFillColorCautionBrush}" />
                     </Border>
 
                     <ui:TextBlock Grid.Row="2" Text="Pick coordinates (or add point in Multi-Point)" VerticalAlignment="Center" Margin="0,6" />
-                    <Border Grid.Row="2" Grid.Column="1" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="4" Padding="10,4" Margin="0,6">
+                    <Border Grid.Row="2" Grid.Column="1" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="4" Padding="10,4" Margin="0,6">
                         <ui:TextBlock Text="{Binding HotkeyPick}" FontWeight="SemiBold" />
                     </Border>
 
                     <ui:TextBlock Grid.Row="3" Text="Start or stop Multi-Point sequence" VerticalAlignment="Center" Margin="0,6" />
-                    <Border Grid.Row="3" Grid.Column="1" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="4" Padding="10,4" Margin="0,6">
+                    <Border Grid.Row="3" Grid.Column="1" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="4" Padding="10,4" Margin="0,6">
                         <ui:TextBlock Text="{Binding HotkeyMultiPoint}" FontWeight="SemiBold" />
                     </Border>
                 </Grid>
@@ -141,6 +149,30 @@
                                 Severity="Error"
                                 Margin="0,12,0,0" />
                 </StackPanel>
+            </Border>
+
+            <TextBlock Text="About" Style="{StaticResource SectionHeading}" Margin="0,12,0,8" />
+            <Border Style="{StaticResource SectionCard}" Margin="0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Image Source="pack://application:,,,/Assets/FlowClicker.png" Width="28" Height="28"
+                           RenderOptions.BitmapScalingMode="HighQuality"
+                           VerticalAlignment="Center" Margin="0,0,12,0" />
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <ui:TextBlock Text="FlowClicker" FontTypography="BodyStrong" />
+                        <ui:TextBlock Text="Settings saved to %LocalAppData%\FlowClicker\settings.json"
+                                      FontTypography="Caption"
+                                      Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <Border Grid.Column="2" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                            CornerRadius="6" Padding="10,4" VerticalAlignment="Center">
+                        <ui:TextBlock Text="{Binding AppVersion}" FontTypography="Caption" FontWeight="SemiBold" />
+                    </Border>
+                </Grid>
             </Border>
         </StackPanel>
     </ScrollViewer>
