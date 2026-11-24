@@ -71,13 +71,19 @@
                     </ui:Button>
                 </Grid>
             </Border>
+            <ui:InfoBar Title="Mouse action failed"
+                        Message="{Binding FailureMessage}"
+                        IsOpen="{Binding InputFailed}"
+                        IsClosable="False"
+                        Severity="Error"
+                        Margin="0,8,0,0" />
         </StackPanel>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="24,0,24,12"
                       IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBooleanConverter}}">
             <StackPanel>
                 <TextBlock Text="Timing" Style="{StaticResource SectionHeading}" />
-                <Border Style="{StaticResource SectionCard}">
+                <Border Style="{StaticResource SectionCard}" IsEnabled="{Binding IsNotHoldMode}">
                     <StackPanel>
                         <!-- CPS Slider -->
                         <Grid Margin="0,0,0,8">
@@ -91,15 +97,16 @@
                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                                 <Slider Minimum="1"
                                         Maximum="1000"
-                                        Value="{Binding Cps, Mode=TwoWay}"
+                                        Value="{Binding SliderCps, Mode=TwoWay}"
                                         IsSnapToTickEnabled="False"
                                         Margin="0,6,16,0" />
                             </StackPanel>
                             <ui:NumberBox Grid.Column="1"
-                                          Value="{Binding Cps, Mode=TwoWay}"
-                                          Minimum="1"
+                                          Value="{Binding Cps, Mode=TwoWay, Converter={StaticResource NumberValueConverter}, ConverterParameter=10}"
+                                          Minimum="0.0001"
                                           Maximum="2000"
-                                          Width="120"
+                                          MaxDecimalPlaces="4"
+                                          Width="130"
                                           VerticalAlignment="Center" />
                         </Grid>
 
@@ -119,34 +126,35 @@
 
                             <StackPanel Margin="0,0,8,0">
                                 <ui:TextBlock Text="Hours" FontTypography="Caption" />
-                                <ui:NumberBox Value="{Binding Hours, Mode=TwoWay}"
+                                <ui:NumberBox Value="{Binding Hours, Mode=TwoWay, Converter={StaticResource NumberValueConverter}, ConverterParameter=0}"
                                               Minimum="0"
-                                              Margin="0,4,0,0"
-                                              ValueChanged="OnIntervalBoxChanged" />
+                                              Maximum="24"
+                                              MaxDecimalPlaces="0"
+                                              Margin="0,4,0,0" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="1" Margin="4,0,4,0">
                                 <ui:TextBlock Text="Minutes" FontTypography="Caption" />
-                                <ui:NumberBox Value="{Binding Minutes, Mode=TwoWay}"
+                                <ui:NumberBox Value="{Binding Minutes, Mode=TwoWay, Converter={StaticResource NumberValueConverter}, ConverterParameter=0}"
                                               Minimum="0"
-                                              Margin="0,4,0,0"
-                                              ValueChanged="OnIntervalBoxChanged" />
+                                              MaxDecimalPlaces="0"
+                                              Margin="0,4,0,0" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" Margin="4,0,4,0">
                                 <ui:TextBlock Text="Seconds" FontTypography="Caption" />
-                                <ui:NumberBox Value="{Binding Seconds, Mode=TwoWay}"
+                                <ui:NumberBox Value="{Binding Seconds, Mode=TwoWay, Converter={StaticResource NumberValueConverter}, ConverterParameter=0}"
                                               Minimum="0"
-                                              Margin="0,4,0,0"
-                                              ValueChanged="OnIntervalBoxChanged" />
+                                              MaxDecimalPlaces="0"
+                                              Margin="0,4,0,0" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="3" Margin="8,0,0,0">
                                 <ui:TextBlock Text="Milliseconds" FontTypography="Caption" />
-                                <ui:NumberBox Value="{Binding Milliseconds, Mode=TwoWay}"
+                                <ui:NumberBox Value="{Binding Milliseconds, Mode=TwoWay, Converter={StaticResource NumberValueConverter}, ConverterParameter=0}"
                                               Minimum="0"
-                                              Margin="0,4,0,0"
-                                              ValueChanged="OnIntervalBoxChanged" />
+                                              MaxDecimalPlaces="1"
+                                              Margin="0,4,0,0" />
                             </StackPanel>
                         </Grid>
                     </StackPanel>
@@ -167,7 +175,7 @@
                                       SelectedValuePath="Tag"
                                       Margin="0,8,0,0"
                                       HorizontalAlignment="Stretch">
-                                <ComboBoxItem Content="Left Button" Tag="{x:Static models:ClickMouseButton.Left}" IsSelected="True" />
+                                <ComboBoxItem Content="Left Button" Tag="{x:Static models:ClickMouseButton.Left}" />
                                 <ComboBoxItem Content="Right Button" Tag="{x:Static models:ClickMouseButton.Right}" />
                                 <ComboBoxItem Content="Middle Button" Tag="{x:Static models:ClickMouseButton.Middle}" />
                                 <ComboBoxItem Content="XButton 1 (Back)" Tag="{x:Static models:ClickMouseButton.XButton1}" />
@@ -182,7 +190,7 @@
                                       SelectedValuePath="Tag"
                                       Margin="0,8,0,0"
                                       HorizontalAlignment="Stretch">
-                                <ComboBoxItem Content="Single Click" Tag="{x:Static models:ClickType.Single}" IsSelected="True" />
+                                <ComboBoxItem Content="Single Click" Tag="{x:Static models:ClickType.Single}" />
                                 <ComboBoxItem Content="Double Click" Tag="{x:Static models:ClickType.Double}" />
                                 <ComboBoxItem Content="Hold (no repeated clicks)" Tag="{x:Static models:ClickType.Hold}" />
                             </ComboBox>
@@ -212,11 +220,15 @@
                             </Grid.ColumnDefinitions>
 
                             <ui:TextBlock Text="X" VerticalAlignment="Center" Margin="0,0,8,0" />
-                            <ui:NumberBox Grid.Column="1" Value="{Binding FixedX, Mode=TwoWay}"
+                            <ui:NumberBox Grid.Column="1"
+                                          Value="{Binding FixedX, Mode=TwoWay, Converter={StaticResource NumberValueConverter}, ConverterParameter=0}"
+                                          MaxDecimalPlaces="0"
                                           IsEnabled="{Binding IsCurrentCursor, Converter={StaticResource InverseBooleanConverter}}" />
 
                             <ui:TextBlock Grid.Column="2" Text="Y" VerticalAlignment="Center" Margin="16,0,8,0" />
-                            <ui:NumberBox Grid.Column="3" Value="{Binding FixedY, Mode=TwoWay}"
+                            <ui:NumberBox Grid.Column="3"
+                                          Value="{Binding FixedY, Mode=TwoWay, Converter={StaticResource NumberValueConverter}, ConverterParameter=0}"
+                                          MaxDecimalPlaces="0"
                                           IsEnabled="{Binding IsCurrentCursor, Converter={StaticResource InverseBooleanConverter}}" />
 
                             <ui:Button Grid.Column="4"
@@ -228,9 +240,60 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Repeat Card -->
+                <Border Style="{StaticResource SectionCard}" IsEnabled="{Binding IsNotHoldMode}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <ui:TextBlock Text="Click repeat" FontTypography="BodyStrong" Margin="0,0,0,8" />
+                            <WrapPanel>
+                                <RadioButton Content="Repeat until stopped"
+                                             IsChecked="{Binding IsInfiniteRepeat, Mode=TwoWay}"
+                                             Margin="0,0,20,0" />
+                                <RadioButton Content="Stop after"
+                                             IsChecked="{Binding IsInfiniteRepeat, Mode=TwoWay, Converter={StaticResource InverseBooleanConverter}}" />
+                            </WrapPanel>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                                    IsEnabled="{Binding IsInfiniteRepeat, Converter={StaticResource InverseBooleanConverter}}">
+                            <ui:NumberBox Value="{Binding RepeatTimes, Mode=TwoWay, Converter={StaticResource NumberValueConverter}, ConverterParameter=1}"
+                                          Minimum="1"
+                                          MaxDecimalPlaces="0"
+                                          Width="110" />
+                            <ui:TextBlock Text="clicks" FontTypography="Caption"
+                                          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                          VerticalAlignment="Center" Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
                 <TextBlock Text="Advanced" Style="{StaticResource SectionHeading}" Margin="0,12,0,8" />
-                <Border Style="{StaticResource SectionCard}">
+                <Border Style="{StaticResource SectionCard}" IsEnabled="{Binding IsNotHoldMode}">
                     <StackPanel>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <ui:TextBlock Text="Timer precision" FontTypography="BodyStrong" />
+                                <ui:TextBlock Text="Eco lowers CPU and battery usage; Precision prioritizes strict sub-millisecond timing." TextWrapping="Wrap"
+                                              FontTypography="Caption"
+                                              Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            <ComboBox Grid.Column="1"
+                                      SelectedValue="{Binding EngineMode, Mode=TwoWay}"
+                                      SelectedValuePath="Tag"
+                                      Width="164"
+                                      VerticalAlignment="Center">
+                                <ComboBoxItem Content="Eco (Low CPU)" Tag="{x:Static models:TimerEngineMode.Eco}" />
+                                <ComboBoxItem Content="Precision" Tag="{x:Static models:TimerEngineMode.Precision}" />
+                            </ComboBox>
+                        </Grid>
+
                         <Grid Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />

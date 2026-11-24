@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.Threading;
-using System.Windows;
 using FlowClicker.Core.Native;
 using FlowClicker.Core.Services.Models;
 
@@ -10,10 +9,13 @@ namespace FlowClicker.Core.Engine
     public sealed class ClickEngine : IClickEngine, IDisposable
     {
         private long _totalClicks;
+        private volatile bool _inputFailed;
+        private int _failureReason;
         private readonly Humanizer _humanizer = new();
 
         private readonly MouseAction _action;
-        public bool InputFailed { get; private set; }
+        public bool InputFailed => _inputFailed;
+        public InputFailureReason FailureReason => (InputFailureReason)Volatile.Read(ref _failureReason);
 
         private readonly MouseWorker _worker = new();
 
@@ -30,7 +32,8 @@ namespace FlowClicker.Core.Engine
             _worker.Start("FlowClicker clicker", ThreadPriority.Normal, token =>
             {
                 Interlocked.Exchange(ref _totalClicks, 0);
-                InputFailed = false;
+                _inputFailed = false;
+                Volatile.Write(ref _failureReason, (int)InputFailureReason.None);
                 try
                 {
                     WorkerLoop(config, token);
@@ -38,7 +41,10 @@ namespace FlowClicker.Core.Engine
                 finally
                 {
                     if (!_action.Release())
-                        InputFailed = true;
+                    {
+                        _inputFailed = true;
+                        Volatile.Write(ref _failureReason, (int)InputFailureReason.InjectionBlocked);
+                    }
                 }
             }, running => StateChanged?.Invoke(this, running));
         }
@@ -47,18 +53,38 @@ namespace FlowClicker.Core.Engine
 
         private void WorkerLoop(ClickEngineConfiguration config, CancellationToken ct)
         {
-            using var timerScope = new MultimediaTimerResolutionScope(1);
+            if (config.ClickType == ClickType.Hold)
+            {
+                (int X, int Y)? holdPos = config.LocationMode == ClickLocationMode.FixedCoordinates
+                    ? (config.FixedX, config.FixedY)
+                    : null;
+                var result = _action.SendDetailed(config.Button, ClickType.Hold, holdPos, ct);
+                if (result != InputSendResult.Success)
+                {
+                    RecordFailure(result, ct);
+                    return;
+                }
 
-            double targetIntervalMs = 1000.0 / Math.Clamp(config.Cps, 0.1, 2000.0);
+                Interlocked.Increment(ref _totalClicks);
+                ct.WaitHandle.WaitOne();
+                return;
+            }
+
+            double targetIntervalMs = config.ResolveIntervalMs();
+            using var timerScope = (config.EngineMode == TimerEngineMode.Precision || targetIntervalMs <= 20.0)
+                ? new MultimediaTimerResolutionScope(1)
+                : (MultimediaTimerResolutionScope?)null;
+
             long intervalTicks = (long)(targetIntervalMs * (Stopwatch.Frequency / 1000.0));
             long nextTick = Stopwatch.GetTimestamp();
 
             while (!ct.IsCancellationRequested)
             {
                 // Execute click action
-                if (!PerformClickAction(config, ct))
+                var result = PerformClickAction(config, ct);
+                if (result != InputSendResult.Success)
                 {
-                    InputFailed = !ct.IsCancellationRequested;
+                    RecordFailure(result, ct);
                     return;
                 }
 
@@ -86,19 +112,27 @@ namespace FlowClicker.Core.Engine
                     nextTick = now + currentInterval;
                 AccurateWaitEngine.AccurateWait(nextTick, ct, config.EngineMode);
             }
-
         }
 
-        private bool PerformClickAction(ClickEngineConfiguration config, CancellationToken ct)
+        private InputSendResult PerformClickAction(ClickEngineConfiguration config, CancellationToken ct)
         {
             if (config.LocationMode != ClickLocationMode.FixedCoordinates)
-                return _action.Send(config.Button, config.ClickType, cancellationToken: ct);
+                return _action.SendDetailed(config.Button, config.ClickType, cancellationToken: ct);
 
             var (dx, dy) = config.EnableHumanizer
                 ? _humanizer.GenerateCoordinateJitter(config.HumanizerRadiusPx)
                 : (0, 0);
 
-            return _action.Send(config.Button, config.ClickType, (config.FixedX + dx, config.FixedY + dy), ct);
+            return _action.SendDetailed(config.Button, config.ClickType, (config.FixedX + dx, config.FixedY + dy), ct);
+        }
+
+        private void RecordFailure(InputSendResult result, CancellationToken ct)
+        {
+            if (ct.IsCancellationRequested || result == InputSendResult.Cancelled)
+                return;
+
+            _inputFailed = true;
+            Volatile.Write(ref _failureReason, (int)MouseAction.ToFailureReason(result));
         }
 
         public void Dispose()

@@ -1,9 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
-using FlowClicker.UI.ViewModels;
 using Wpf.Ui.Animations;
-using Wpf.Ui.Controls;
 
 namespace FlowClicker.UI.Views
 {
@@ -12,14 +10,6 @@ namespace FlowClicker.UI.Views
         public AutoClickerView()
         {
             InitializeComponent();
-        }
-
-        private void OnIntervalBoxChanged(object sender, NumberBoxValueChangedEventArgs e)
-        {
-            if (DataContext is AutoClickerViewModel vm)
-            {
-                vm.UpdateCpsFromInterval();
-            }
         }
 
         private void OnVariationOptionsVisibilityChanged(object sender, DependencyPropertyChangedEventArgs e)

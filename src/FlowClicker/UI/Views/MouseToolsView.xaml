@@ -5,11 +5,18 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:services="clr-namespace:FlowClicker.Core.Services"
+             xmlns:models="clr-namespace:FlowClicker.Core.Services.Models"
              mc:Ignorable="d" 
              d:DesignHeight="700" d:DesignWidth="800">
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,16,24,12">
         <StackPanel>
             <TextBlock Text="Mouse Tools" Style="{StaticResource PageHeading}" />
+            <ui:InfoBar Title="Mouse tool action failed"
+                        Message="{Binding FailureMessage}"
+                        IsOpen="{Binding InputFailed}"
+                        IsClosable="False"
+                        Severity="Error"
+                        Margin="0,0,0,12" />
             <TextBlock Text="Pointer and scrolling" Style="{StaticResource SectionHeading}" />
 
             <!-- 1. Auto-Scroll Tool Card -->
@@ -20,7 +27,7 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel>
+                    <StackPanel IsEnabled="{Binding IsAutoScrollRunning, Converter={StaticResource InverseBooleanConverter}}">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <ui:FontIcon Style="{StaticResource WindowsIcon}" Glyph="&#xE8CB;" FontSize="20" Margin="0,0,8,0" />
                             <ui:TextBlock Text="Auto-scroll" FontTypography="BodyStrong" VerticalAlignment="Center" />
@@ -38,7 +45,7 @@
                                           SelectedValuePath="Tag"
                                           Margin="0,6,0,0"
                                           HorizontalAlignment="Stretch">
-                                    <ComboBoxItem Content="Down" Tag="{x:Static services:ScrollDirection.Down}" IsSelected="True" />
+                                    <ComboBoxItem Content="Down" Tag="{x:Static services:ScrollDirection.Down}" />
                                     <ComboBoxItem Content="Up" Tag="{x:Static services:ScrollDirection.Up}" />
                                     <ComboBoxItem Content="Right" Tag="{x:Static services:ScrollDirection.Right}" />
                                     <ComboBoxItem Content="Left" Tag="{x:Static services:ScrollDirection.Left}" />
@@ -46,7 +53,7 @@
                             </StackPanel>
 
                             <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                                <ui:TextBlock Text="Lines per second" FontTypography="Caption" />
+                                <ui:TextBlock Text="Steps per second" FontTypography="Caption" />
                                 <Grid Margin="0,6,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -91,7 +98,7 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel>
+                    <StackPanel IsEnabled="{Binding IsJigglerRunning, Converter={StaticResource InverseBooleanConverter}}">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <ui:FontIcon Style="{StaticResource WindowsIcon}" Glyph="&#xE962;" FontSize="20" Margin="0,0,8,0" />
                             <ui:TextBlock Text="Mouse jiggler" FontTypography="BodyStrong" VerticalAlignment="Center" />
@@ -113,7 +120,7 @@
                                           SelectedValuePath="Tag"
                                           Margin="0,6,0,0"
                                           HorizontalAlignment="Stretch">
-                                    <ComboBoxItem Content="Smooth curve" Tag="{x:Static services:JigglerMode.Lissajous}" IsSelected="True" />
+                                    <ComboBoxItem Content="Smooth curve" Tag="{x:Static services:JigglerMode.Lissajous}" />
                                     <ComboBoxItem Content="1-pixel nudge" Tag="{x:Static services:JigglerMode.MicroNudge}" />
                                 </ComboBox>
                             </StackPanel>
@@ -164,7 +171,7 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel>
+                    <StackPanel IsEnabled="{Binding IsHoldLockActive, Converter={StaticResource InverseBooleanConverter}}">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <ui:FontIcon Style="{StaticResource WindowsIcon}" Glyph="&#xE72E;" FontSize="20" Margin="0,0,8,0" />
                             <ui:TextBlock Text="Hold a mouse button" FontTypography="BodyStrong" VerticalAlignment="Center" />
@@ -174,10 +181,17 @@
                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                       Margin="0,0,0,12" />
 
-                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <RadioButton Content="Left button" IsChecked="{Binding HoldLockIsLeftButton, Mode=TwoWay}" Margin="0,0,24,0" />
-                            <RadioButton Content="Right button" IsChecked="{Binding HoldLockIsLeftButton, Mode=TwoWay, Converter={StaticResource InverseBooleanConverter}}" />
-                        </StackPanel>
+                        <ComboBox SelectedValue="{Binding HoldButton, Mode=TwoWay}"
+                                  SelectedValuePath="Tag"
+                                  Width="200"
+                                  HorizontalAlignment="Left"
+                                  Margin="0,4,0,0">
+                            <ComboBoxItem Content="Left Button" Tag="{x:Static models:ClickMouseButton.Left}" />
+                            <ComboBoxItem Content="Right Button" Tag="{x:Static models:ClickMouseButton.Right}" />
+                            <ComboBoxItem Content="Middle Button" Tag="{x:Static models:ClickMouseButton.Middle}" />
+                            <ComboBoxItem Content="XButton 1 (Back)" Tag="{x:Static models:ClickMouseButton.XButton1}" />
+                            <ComboBoxItem Content="XButton 2 (Forward)" Tag="{x:Static models:ClickMouseButton.XButton2}" />
+                        </ComboBox>
                     </StackPanel>
 
                     <!-- Toggle Hold Lock Button -->

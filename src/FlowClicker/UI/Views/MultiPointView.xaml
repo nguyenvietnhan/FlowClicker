@@ -4,16 +4,31 @@
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="clr-namespace:FlowClicker.Core.Services.Models"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
              mc:Ignorable="d" 
              d:DesignHeight="700" d:DesignWidth="800">
+    <UserControl.Resources>
+        <ObjectDataProvider x:Key="MouseButtonValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="models:ClickMouseButton" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+        <ObjectDataProvider x:Key="ClickTypeValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="models:ClickType" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </UserControl.Resources>
     <Grid Margin="24,16,24,12">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Grid Margin="0,0,0,16">
+        <Grid Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
@@ -24,18 +39,18 @@
             </StackPanel>
             <ui:Button Grid.Column="1"
                        Command="{Binding ToggleSequenceCommand}"
-                       MinWidth="128"
+                       MinWidth="148"
                        Height="38" VerticalAlignment="Center"
                        CornerRadius="4">
                 <ui:Button.Style>
                     <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
                         <Setter Property="Appearance" Value="Primary" />
-                        <Setter Property="Content" Value="Run Sequence" />
+                        <Setter Property="Content" Value="Run Sequence (F8)" />
                         <Setter Property="Icon" Value="{ui:FontIcon '&#xE768;', FontFamily='Segoe Fluent Icons, Segoe MDL2 Assets', FontSize=16}" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding IsRunning}" Value="True">
                                 <Setter Property="Appearance" Value="Danger" />
-                                <Setter Property="Content" Value="Stop Sequence" />
+                                <Setter Property="Content" Value="Stop Sequence (F8)" />
                                 <Setter Property="Icon" Value="{ui:FontIcon '&#xE71A;', FontFamily='Segoe Fluent Icons, Segoe MDL2 Assets', FontSize=16}" />
                             </DataTrigger>
                         </Style.Triggers>
@@ -44,15 +59,24 @@
             </ui:Button>
         </Grid>
 
+        <ui:InfoBar Grid.Row="1"
+                    Title="Sequence action failed"
+                    Message="{Binding FailureMessage}"
+                    IsOpen="{Binding InputFailed}"
+                    IsClosable="False"
+                    Severity="Error"
+                    Margin="0,0,0,8" />
+
         <!-- Coordinate List Card -->
-        <Border Grid.Row="1" Style="{StaticResource SectionCard}">
+        <Border Grid.Row="2" Style="{StaticResource SectionCard}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <WrapPanel Margin="0,0,0,8">
+                <WrapPanel Margin="0,0,0,8"
+                           IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBooleanConverter}}">
                     <WrapPanel.Resources>
                         <Style x:Key="SequenceToolButton" TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
                             <Setter Property="Appearance" Value="Transparent" />
@@ -62,7 +86,7 @@
                         </Style>
                     </WrapPanel.Resources>
                     <ui:Button Command="{Binding PickAndAddPointCommand}"
-                               Content="Pick point"
+                               Content="Pick point (F7)"
                                Style="{StaticResource SequenceToolButton}">
                         <ui:Button.Icon>
                             <ui:FontIcon Style="{StaticResource WindowsIcon}" Glyph="&#xF272;" />
@@ -109,26 +133,34 @@
                 <DataGrid Grid.Row="1"
                           ItemsSource="{Binding Points}"
                           SelectedItem="{Binding SelectedPoint, Mode=TwoWay}"
+                          IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBooleanConverter}}"
                           AutoGenerateColumns="False"
                           CanUserAddRows="False"
                           CanUserDeleteRows="False"
+                          CanUserSortColumns="False"
                           GridLinesVisibility="Horizontal"
                           HeadersVisibility="Column"
-                          CanUserResizeColumns="False"
+                          CanUserResizeColumns="True"
                           Loaded="OnPointsGridLoaded"
                           RowHeight="36"
                           BorderThickness="1"
                           BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                           Background="Transparent">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="#" Binding="{Binding Order}" Width="36" IsReadOnly="True" />
-                        <DataGridTextColumn Header="X (px)" Binding="{Binding X}" Width="56" />
-                        <DataGridTextColumn Header="Y (px)" Binding="{Binding Y}" Width="56" />
-                        <DataGridTextColumn Header="Before (ms)" Binding="{Binding PreDelayMs}" Width="104" />
-                        <DataGridTextColumn Header="After (ms)" Binding="{Binding PostDelayMs}" Width="96" />
-                        <DataGridTextColumn Header="Button" Binding="{Binding Button}" Width="80" />
-                        <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="70" />
-                        <DataGridTextColumn Header="Label" Binding="{Binding Comment}" Width="*" MinWidth="108">
+                        <DataGridTextColumn Header="#" Binding="{Binding Order}" Width="38" IsReadOnly="True" />
+                        <DataGridTextColumn Header="X (px)" Binding="{Binding X, UpdateSourceTrigger=PropertyChanged}" Width="72" />
+                        <DataGridTextColumn Header="Y (px)" Binding="{Binding Y, UpdateSourceTrigger=PropertyChanged}" Width="72" />
+                        <DataGridTextColumn Header="Before (ms)" Binding="{Binding PreDelayMs, UpdateSourceTrigger=PropertyChanged}" Width="96" />
+                        <DataGridTextColumn Header="After (ms)" Binding="{Binding PostDelayMs, UpdateSourceTrigger=PropertyChanged}" Width="92" />
+                        <DataGridComboBoxColumn Header="Button"
+                                                ItemsSource="{Binding Source={StaticResource MouseButtonValues}}"
+                                                SelectedItemBinding="{Binding Button, UpdateSourceTrigger=PropertyChanged}"
+                                                Width="92" />
+                        <DataGridComboBoxColumn Header="Type"
+                                                ItemsSource="{Binding Source={StaticResource ClickTypeValues}}"
+                                                SelectedItemBinding="{Binding Type, UpdateSourceTrigger=PropertyChanged}"
+                                                Width="80" />
+                        <DataGridTextColumn Header="Label" Binding="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" Width="*" MinWidth="100">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock" BasedOn="{x:Static DataGridTextColumn.DefaultElementStyle}">
                                     <Setter Property="TextTrimming" Value="CharacterEllipsis" />
@@ -142,17 +174,19 @@
         </Border>
 
         <!-- Sequence Options & Status Card -->
-        <Border Grid.Row="2" Style="{StaticResource SectionCard}" Margin="0">
+        <Border Grid.Row="3" Style="{StaticResource SectionCard}" Margin="0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
+                            IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBooleanConverter}}">
                     <ui:TextBlock Text="Repeats" FontTypography="Body" VerticalAlignment="Center" Margin="0,0,8,0" />
-                    <ui:NumberBox Value="{Binding RepeatCount, Mode=TwoWay}"
+                    <ui:NumberBox Value="{Binding RepeatCount, Mode=TwoWay, Converter={StaticResource NumberValueConverter}, ConverterParameter=0}"
                                   Minimum="0"
+                                  MaxDecimalPlaces="0"
                                   Width="90"
                                   Margin="0,0,8,0" />
                     <ui:TextBlock Text="0 = continuous" FontTypography="Caption" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
@@ -160,7 +194,7 @@
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
                     <ui:TextBlock Text="Step" FontTypography="Caption" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,6,0" />
-                    <ui:TextBlock Text="{Binding CurrentStepIndex}" FontTypography="BodyStrong" Margin="0,0,16,0" />
+                    <ui:TextBlock Text="{Binding DisplayStep}" FontTypography="BodyStrong" Margin="0,0,16,0" />
 
                     <ui:TextBlock Text="Cycles" FontTypography="Caption" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,6,0" />
                     <ui:TextBlock Text="{Binding CompletedCycles}" FontTypography="BodyStrong" />

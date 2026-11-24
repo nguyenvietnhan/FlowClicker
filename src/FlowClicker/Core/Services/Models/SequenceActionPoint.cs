@@ -1,18 +1,47 @@
 using System;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace FlowClicker.Core.Services.Models
 {
-    public sealed class SequenceActionPoint
+    public sealed partial class SequenceActionPoint : ObservableObject
     {
         public Guid Id { get; init; } = Guid.NewGuid();
-        public int Order { get; set; }
-        public int X { get; set; }
-        public int Y { get; set; }
-        public ClickMouseButton Button { get; set; } = ClickMouseButton.Left;
-        public ClickType Type { get; set; } = ClickType.Single;
-        public int PreDelayMs { get; set; } = 50;
-        public int PostDelayMs { get; set; } = 100;
-        public string Comment { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        private int _order;
+
+        [ObservableProperty]
+        private int _x;
+
+        [ObservableProperty]
+        private int _y;
+
+        [ObservableProperty]
+        private ClickMouseButton _button = ClickMouseButton.Left;
+
+        [ObservableProperty]
+        private ClickType _type = ClickType.Single;
+
+        [ObservableProperty]
+        private int _preDelayMs = 50;
+
+        [ObservableProperty]
+        private int _postDelayMs = 100;
+
+        [ObservableProperty]
+        private string _comment = string.Empty;
+
+        partial void OnPreDelayMsChanged(int value)
+        {
+            if (value < 0)
+                PreDelayMs = 0;
+        }
+
+        partial void OnPostDelayMsChanged(int value)
+        {
+            if (value < 0)
+                PostDelayMs = 0;
+        }
 
         public SequenceActionPoint Clone()
         {
@@ -24,8 +53,8 @@ namespace FlowClicker.Core.Services.Models
                 Y = Y,
                 Button = Button,
                 Type = Type,
-                PreDelayMs = PreDelayMs,
-                PostDelayMs = PostDelayMs,
+                PreDelayMs = Math.Max(0, PreDelayMs),
+                PostDelayMs = Math.Max(0, PostDelayMs),
                 Comment = Comment
             };
         }

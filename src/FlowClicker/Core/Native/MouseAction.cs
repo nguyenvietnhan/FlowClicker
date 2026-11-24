@@ -2,6 +2,15 @@ using FlowClicker.Core.Services.Models;
 
 namespace FlowClicker.Core.Native;
 
+internal enum InputSendResult
+{
+    Success,
+    Cancelled,
+    InvalidParameters,
+    ButtonOwnedByOther,
+    InjectionFailed
+}
+
 internal sealed class MouseAction
 {
     private static readonly object Gate = new();
@@ -14,11 +23,15 @@ internal sealed class MouseAction
     internal MouseAction(Func<INPUT[], int, uint> inject) => _inject = inject;
 
     public bool Send(ClickMouseButton button, ClickType type, (int X, int Y)? position = null,
+        CancellationToken cancellationToken = default) =>
+        SendDetailed(button, type, position, cancellationToken) == InputSendResult.Success;
+
+    public InputSendResult SendDetailed(ClickMouseButton button, ClickType type, (int X, int Y)? position = null,
         CancellationToken cancellationToken = default)
     {
         int index = (int)button;
         if ((uint)index >= Owners.Length || (uint)type > (uint)ClickType.Hold)
-            return false;
+            return InputSendResult.InvalidParameters;
 
         var (down, up, data) = GetFlags(button);
         int count = 0;
@@ -45,17 +58,25 @@ internal sealed class MouseAction
         lock (Gate)
         {
             if (cancellationToken.IsCancellationRequested)
-                return false;
+                return InputSendResult.Cancelled;
 
             if (Owners[index] is { } owner && owner != this)
-                return false;
+                return InputSendResult.ButtonOwnedByOther;
 
             uint sent = _inject(_buffer, count);
             if (sent > movementCount)
                 Owners[index] = (sent - movementCount) % 2 == 1 ? this : null;
-            return sent == count;
+
+            return sent == count ? InputSendResult.Success : InputSendResult.InjectionFailed;
         }
     }
+
+    public static InputFailureReason ToFailureReason(InputSendResult result) => result switch
+    {
+        InputSendResult.ButtonOwnedByOther => InputFailureReason.ButtonOwnedByOther,
+        InputSendResult.InjectionFailed or InputSendResult.InvalidParameters => InputFailureReason.InjectionBlocked,
+        _ => InputFailureReason.None
+    };
 
     public static void EmergencyRelease()
     {

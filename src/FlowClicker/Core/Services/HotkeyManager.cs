@@ -30,28 +30,35 @@ namespace FlowClicker.Core.Services
 
         public int Register(uint modifiers, Key key, Action callback)
         {
+            return TryRegister(modifiers, key, callback, out int id, out _) ? id : -1;
+        }
+
+        public bool TryRegister(uint modifiers, Key key, Action callback, out int id, out int win32Error)
+        {
             if (_hwndSource == null)
             {
                 throw new InvalidOperationException("HotkeyManager must be initialized with a Window before registering hotkeys.");
             }
 
-            int id = Interlocked.Increment(ref _currentId);
+            id = Interlocked.Increment(ref _currentId);
             uint vk = (uint)KeyInterop.VirtualKeyFromKey(key);
 
             // MOD_NOREPEAT (0x4000) prevents repeated WM_HOTKEY messages on key hold
             bool success = NativeMethods.RegisterHotKey(_hwndSource.Handle, id, modifiers | NativeMethods.MOD_NOREPEAT, vk);
             if (!success)
             {
-                int error = Marshal.GetLastWin32Error();
-                Debug.WriteLine($"[HotkeyManager] RegisterHotKey failed for Key {key} (Win32 Error: {error})");
-                return -1;
+                win32Error = Marshal.GetLastWin32Error();
+                Debug.WriteLine($"[HotkeyManager] RegisterHotKey failed for Key {key} (Win32 Error: {win32Error})");
+                id = -1;
+                return false;
             }
 
+            win32Error = 0;
             lock (_hotkeyActions)
             {
                 _hotkeyActions[id] = callback;
             }
-            return id;
+            return true;
         }
 
         public void Unregister(int id)

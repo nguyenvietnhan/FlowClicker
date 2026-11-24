@@ -10,6 +10,7 @@
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
             <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+            <converters:NumberValueConverter x:Key="NumberValueConverter" />
             <Style x:Key="WindowsIcon" TargetType="ui:FontIcon">
                 <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />
                 <Setter Property="FontSize" Value="16" />

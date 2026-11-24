@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -5,7 +6,7 @@ using System.Windows.Media;
 
 namespace FlowClicker.UI.Views
 {
-    public partial class MultiPointView : UserControl
+    public partial class MultiPointView : UserControl, IDisposable
     {
         public MultiPointView()
         {
@@ -20,14 +21,18 @@ namespace FlowClicker.UI.Views
         private static void DisableHorizontalScrolling(DependencyObject element)
         {
             if (element is ScrollViewer scrollViewer && scrollViewer.Name == "DG_ScrollViewer")
-                scrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
-
-            // The WPF-UI template can show its horizontal bar even with scrolling disabled.
-            if (element is ScrollBar { Name: "PART_HorizontalScrollBar" } bar)
-                bar.Visibility = Visibility.Collapsed;
+                scrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
 
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(element); i++)
                 DisableHorizontalScrolling(VisualTreeHelper.GetChild(element, i));
+        }
+
+        public void Dispose()
+        {
+            if (DataContext is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
         }
     }
 }

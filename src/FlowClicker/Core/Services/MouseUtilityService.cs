@@ -14,33 +14,48 @@ namespace FlowClicker.Core.Services
         private readonly MouseWorker _jiggler = new();
 
         private bool _isHoldLockActive;
-        private readonly MouseAction _hold = new();
+        private volatile bool _inputFailed;
+        private int _failureReason;
+        private readonly MouseAction _hold;
+        private readonly Func<INPUT[], uint> _inject;
 
         private readonly object _syncLock = new();
 
         public bool IsAutoScrollRunning => _scroll.IsRunning;
         public bool IsJigglerRunning => _jiggler.IsRunning;
         public bool IsHoldLockActive => Volatile.Read(ref _isHoldLockActive);
+        public bool InputFailed => _inputFailed;
+        public InputFailureReason FailureReason => (InputFailureReason)Volatile.Read(ref _failureReason);
 
         public event EventHandler<bool>? AutoScrollStateChanged;
         public event EventHandler<bool>? JigglerStateChanged;
         public event EventHandler<bool>? HoldLockStateChanged;
+        public event EventHandler? FailureStateChanged;
+
+        public MouseUtilityService() : this(new MouseAction(), InputInjector.Inject) { }
+
+        internal MouseUtilityService(MouseAction holdAction, Func<INPUT[], uint> inject)
+        {
+            _hold = holdAction;
+            _inject = inject;
+        }
 
         // Auto-Scroll Implementation
-        public void StartAutoScroll(ScrollDirection direction, int speedLinesPerSecond)
+        public void StartAutoScroll(ScrollDirection direction, int speedStepsPerSecond)
         {
+            ClearFailure();
             _scroll.Start("FlowClicker scroll", ThreadPriority.Normal,
-                token => ScrollLoop(direction, Math.Clamp(speedLinesPerSecond, 1, 100), token),
+                token => ScrollLoop(direction, Math.Clamp(speedStepsPerSecond, 1, 100), token),
                 running => AutoScrollStateChanged?.Invoke(this, running));
         }
 
         public void StopAutoScroll() => _scroll.Stop();
 
-        private void ScrollLoop(ScrollDirection direction, int linesPerSec, CancellationToken ct)
+        private void ScrollLoop(ScrollDirection direction, int stepsPerSec, CancellationToken ct)
         {
-            using var timerScope = new MultimediaTimerResolutionScope(1);
+            using var timerScope = stepsPerSec >= 50 ? new MultimediaTimerResolutionScope(1) : (MultimediaTimerResolutionScope?)null;
 
-            int intervalMs = Math.Max(10, 1000 / linesPerSec);
+            double intervalMs = 1000.0 / stepsPerSec;
             long intervalTicks = (long)(intervalMs * (Stopwatch.Frequency / 1000.0));
             long nextTick = Stopwatch.GetTimestamp();
 
@@ -60,23 +75,26 @@ namespace FlowClicker.Core.Services
 
             while (!ct.IsCancellationRequested)
             {
-                InputInjector.Inject(input);
+                if (_inject(input) != 1)
+                {
+                    if (!ct.IsCancellationRequested)
+                        SetFailure(InputFailureReason.InjectionBlocked);
+                    return;
+                }
 
                 nextTick += intervalTicks;
-                AccurateWaitEngine.AccurateWait(nextTick, ct, Models.TimerEngineMode.Eco);
+                long now = Stopwatch.GetTimestamp();
+                if (nextTick <= now)
+                    nextTick = now + intervalTicks;
 
-                long current = Stopwatch.GetTimestamp();
-                if (current > nextTick + intervalTicks)
-                {
-                    nextTick = current + intervalTicks;
-                }
+                AccurateWaitEngine.AccurateWait(nextTick, ct, TimerEngineMode.Eco);
             }
-
         }
 
         // Mouse Jiggler Implementation
         public void StartJiggler(int intervalSeconds = 15, JigglerMode mode = JigglerMode.Lissajous)
         {
+            ClearFailure();
             _jiggler.Start("FlowClicker jiggler", ThreadPriority.Lowest,
                 token => JigglerLoop(Math.Clamp(intervalSeconds, 1, 300), mode, token),
                 running => JigglerStateChanged?.Invoke(this, running));
@@ -100,10 +118,9 @@ namespace FlowClicker.Core.Services
                     var (currX, currY) = CoordinateConverter.GetCurrentCursorPosition();
                     if (Math.Abs(currX - lastX) > 2 || Math.Abs(currY - lastY) > 2)
                     {
-                        // User is actively moving mouse; reset last position and wait
                         lastX = currX;
                         lastY = currY;
-                        i = 0; // reset wait countdown
+                        i = -1; // reset wait countdown cleanly before loop increment
                     }
                 }
 
@@ -111,23 +128,41 @@ namespace FlowClicker.Core.Services
 
                 if (mode == JigglerMode.MicroNudge)
                 {
-                    // Nudge +1 then -1
                     moveInput[0] = INPUT.CreateMouseInput(new MOUSEINPUT { dx = 1, dy = 0, dwFlags = NativeMethods.MOUSEEVENTF_MOVE });
-                    InputInjector.Inject(moveInput);
-                    Thread.Sleep(50);
+                    if (_inject(moveInput) != 1)
+                    {
+                        if (!ct.IsCancellationRequested) SetFailure(InputFailureReason.InjectionBlocked);
+                        return;
+                    }
+                    if (ct.WaitHandle.WaitOne(50))
+                    {
+                        moveInput[0] = INPUT.CreateMouseInput(new MOUSEINPUT { dx = -1, dy = 0, dwFlags = NativeMethods.MOUSEEVENTF_MOVE });
+                        _inject(moveInput);
+                        return;
+                    }
                     moveInput[0] = INPUT.CreateMouseInput(new MOUSEINPUT { dx = -1, dy = 0, dwFlags = NativeMethods.MOUSEEVENTF_MOVE });
-                    InputInjector.Inject(moveInput);
+                    if (_inject(moveInput) != 1)
+                    {
+                        if (!ct.IsCancellationRequested) SetFailure(InputFailureReason.InjectionBlocked);
+                        return;
+                    }
                 }
                 else
                 {
-                    // Lissajous curve motion
-                    for (double t = 0; t < Math.PI * 2; t += 0.4)
+                    // Symmetric 16-step elliptical loop where step k+8 exactly cancels step k (zero net drift).
+                    const int steps = 16;
+                    for (int k = 0; k < steps; k++)
                     {
                         if (ct.IsCancellationRequested) return;
-                        int dx = (int)Math.Round(Math.Sin(t) * 3);
-                        int dy = (int)Math.Round(Math.Sin(2 * t) * 2);
+                        double angle = k * (2.0 * Math.PI / steps);
+                        int dx = (int)Math.Round(Math.Cos(angle) * 3);
+                        int dy = (int)Math.Round(Math.Sin(angle) * 2);
                         moveInput[0] = INPUT.CreateMouseInput(new MOUSEINPUT { dx = dx, dy = dy, dwFlags = NativeMethods.MOUSEEVENTF_MOVE });
-                        InputInjector.Inject(moveInput);
+                        if (_inject(moveInput) != 1)
+                        {
+                            if (!ct.IsCancellationRequested) SetFailure(InputFailureReason.InjectionBlocked);
+                            return;
+                        }
                         if (ct.WaitHandle.WaitOne(20)) return;
                     }
                 }
@@ -136,11 +171,13 @@ namespace FlowClicker.Core.Services
                 lastX = newX;
                 lastY = newY;
             }
-
         }
 
         // Mouse Hold Lock Implementation
-        public void ToggleHoldLock(bool leftButton = true)
+        public void ToggleHoldLock(bool leftButton = true) =>
+            ToggleHoldLock(leftButton ? ClickMouseButton.Left : ClickMouseButton.Right);
+
+        public void ToggleHoldLock(ClickMouseButton button)
         {
             lock (_syncLock)
             {
@@ -150,9 +187,13 @@ namespace FlowClicker.Core.Services
                 }
                 else
                 {
-                    var button = leftButton ? ClickMouseButton.Left : ClickMouseButton.Right;
-                    if (!_hold.Send(button, ClickType.Hold))
+                    ClearFailure();
+                    var result = _hold.SendDetailed(button, ClickType.Hold);
+                    if (result != InputSendResult.Success)
+                    {
+                        SetFailure(MouseAction.ToFailureReason(result));
                         return;
+                    }
 
                     Volatile.Write(ref _isHoldLockActive, true);
                     NotifyState(HoldLockStateChanged, true);
@@ -167,23 +208,46 @@ namespace FlowClicker.Core.Services
                 if (!_isHoldLockActive) return;
 
                 if (!_hold.Release())
+                {
+                    SetFailure(InputFailureReason.InjectionBlocked);
                     return;
+                }
 
                 Volatile.Write(ref _isHoldLockActive, false);
                 NotifyState(HoldLockStateChanged, false);
             }
         }
 
-        private static void NotifyState(EventHandler<bool>? handler, bool state)
+        private void ClearFailure()
         {
-            if (Application.Current != null && Application.Current.Dispatcher != null)
-            {
-                Application.Current.Dispatcher.BeginInvoke(() => handler?.Invoke(null, state));
-            }
+            if (!_inputFailed && FailureReason == InputFailureReason.None)
+                return;
+            _inputFailed = false;
+            Volatile.Write(ref _failureReason, (int)InputFailureReason.None);
+            NotifyEvent(FailureStateChanged);
+        }
+
+        private void SetFailure(InputFailureReason reason)
+        {
+            _inputFailed = true;
+            Volatile.Write(ref _failureReason, (int)reason);
+            NotifyEvent(FailureStateChanged);
+        }
+
+        private void NotifyState(EventHandler<bool>? handler, bool state)
+        {
+            if (Application.Current?.Dispatcher is { } dispatcher)
+                dispatcher.BeginInvoke(() => handler?.Invoke(this, state));
             else
-            {
-                handler?.Invoke(null, state);
-            }
+                handler?.Invoke(this, state);
+        }
+
+        private void NotifyEvent(EventHandler? handler)
+        {
+            if (Application.Current?.Dispatcher is { } dispatcher)
+                dispatcher.BeginInvoke(() => handler?.Invoke(this, EventArgs.Empty));
+            else
+                handler?.Invoke(this, EventArgs.Empty);
         }
 
         public void Dispose()

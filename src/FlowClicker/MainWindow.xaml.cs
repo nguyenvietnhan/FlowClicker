@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -30,6 +31,7 @@ namespace FlowClicker
         private readonly SettingsView _settingsView;
         private FrameworkElement _activePage;
         private RadioButton? _selectedNavigationItem;
+        private HwndSource? _hwndSource;
 
         public MainWindow(
             MainViewModel mainViewModel,
@@ -65,33 +67,72 @@ namespace FlowClicker
 
         private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
         {
+            _mainViewModel.Settings.AttachWindow(this);
+            _mainViewModel.Settings.StopWorkersRequested += OnStopWorkersRequested;
+
             // Initialize HotkeyManager on window handle
             _hotkeyManager.Initialize(this);
 
-            // Register F6: Toggle AutoClicker
-            _hotkeyManager.Register(NativeMethods.MOD_NONE, Key.F6, () =>
-            {
-                _mainViewModel.AutoClicker.ToggleClicking();
-            });
+            var failedHotkeys = new List<string>();
 
-            // Register Shift + Escape: Emergency Panic Neutralize
-            _hotkeyManager.Register(NativeMethods.MOD_SHIFT, Key.Escape, () =>
+            if (!_hotkeyManager.TryRegister(NativeMethods.MOD_NONE, Key.F6, () =>
+                {
+                    _mainViewModel.AutoClicker.ToggleClicking();
+                }, out _, out _))
             {
-                StopWorkers();
-                Core.Native.MouseAction.EmergencyRelease();
-                _mouseUtility.ReleaseHoldLock();
-            });
+                failedHotkeys.Add("F6 (Auto Clicker)");
+            }
 
-            // Register F7: Pick Coordinates
-            _hotkeyManager.Register(NativeMethods.MOD_NONE, Key.F7, () =>
+            if (!_hotkeyManager.TryRegister(NativeMethods.MOD_SHIFT, Key.Escape, () =>
+                {
+                    StopWorkers();
+                    Core.Native.MouseAction.EmergencyRelease();
+                    _mouseUtility.ReleaseHoldLock();
+                }, out _, out _))
             {
-                _mainViewModel.AutoClicker.PickCoordinates();
-            });
+                failedHotkeys.Add("Shift+Escape (Emergency Stop)");
+            }
+
+            if (!_hotkeyManager.TryRegister(NativeMethods.MOD_NONE, Key.F7, () =>
+                {
+                    if (CoordinatePickerWindow.IsSessionActive)
+                    {
+                        CoordinatePickerWindow.ConfirmActivePicker();
+                    }
+                    else if (_activePage == _multiPointView)
+                    {
+                        _mainViewModel.MultiPoint.PickAndAddPoint();
+                    }
+                    else
+                    {
+                        _mainViewModel.AutoClicker.PickCoordinates();
+                    }
+                }, out _, out _))
+            {
+                failedHotkeys.Add("F7 (Pick Coordinates)");
+            }
+
+            if (!_hotkeyManager.TryRegister(NativeMethods.MOD_NONE, Key.F8, () =>
+                {
+                    _mainViewModel.MultiPoint.ToggleSequence();
+                }, out _, out _))
+            {
+                failedHotkeys.Add("F8 (Multi-Point Sequence)");
+            }
+
+            _mainViewModel.Settings.ReportHotkeyRegistrationFailures(failedHotkeys);
 
             // Hook HwndSource for Second-Instance Activation
             var helper = new WindowInteropHelper(this);
-            var source = HwndSource.FromHwnd(helper.Handle);
-            source?.AddHook(WndProc);
+            _hwndSource = HwndSource.FromHwnd(helper.Handle);
+            _hwndSource?.AddHook(WndProc);
+        }
+
+        private void OnStopWorkersRequested(object? sender, EventArgs e)
+        {
+            StopWorkers();
+            _mouseUtility.ReleaseHoldLock();
+            Core.Native.MouseAction.EmergencyRelease();
         }
 
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -169,9 +210,20 @@ namespace FlowClicker
 
         private void OnMainWindowClosed(object? sender, EventArgs e)
         {
+            CoordinatePickerWindow.CancelActivePicker();
+            _mainViewModel.Settings.StopWorkersRequested -= OnStopWorkersRequested;
+            _mainViewModel.Settings.DetachWindow();
+            if (_hwndSource != null && !_hwndSource.IsDisposed)
+            {
+                _hwndSource.RemoveHook(WndProc);
+                _hwndSource = null;
+            }
+
             StopWorkers();
+            _mouseUtility.ReleaseHoldLock();
             _hotkeyManager.Dispose();
             _autoClickerView.Dispose();
+            _multiPointView.Dispose();
         }
 
         private void StopWorkers()

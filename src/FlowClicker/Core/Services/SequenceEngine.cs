@@ -13,9 +13,12 @@ namespace FlowClicker.Core.Services
     {
         private int _currentStepIndex;
         private int _completedCycles;
+        private volatile bool _inputFailed;
+        private int _failureReason;
 
-        private readonly MouseAction _action = new();
-        public bool InputFailed { get; private set; }
+        private readonly MouseAction _action;
+        public bool InputFailed => _inputFailed;
+        public InputFailureReason FailureReason => (InputFailureReason)Volatile.Read(ref _failureReason);
 
         private readonly MouseWorker _worker = new();
 
@@ -24,6 +27,10 @@ namespace FlowClicker.Core.Services
         public int CompletedCycles => Volatile.Read(ref _completedCycles);
 
         public event EventHandler<bool>? StateChanged;
+
+        public SequenceEngine() : this(new MouseAction()) { }
+
+        internal SequenceEngine(MouseAction action) => _action = action;
 
         public void Start(IReadOnlyList<SequenceActionPoint> points, int repeatCount = 0)
         {
@@ -35,7 +42,8 @@ namespace FlowClicker.Core.Services
             {
                 Volatile.Write(ref _currentStepIndex, 0);
                 Volatile.Write(ref _completedCycles, 0);
-                InputFailed = false;
+                _inputFailed = false;
+                Volatile.Write(ref _failureReason, (int)InputFailureReason.None);
                 try
                 {
                     SequenceLoop(snapshot, repeatCount, token);
@@ -43,7 +51,10 @@ namespace FlowClicker.Core.Services
                 finally
                 {
                     if (!_action.Release())
-                        InputFailed = true;
+                    {
+                        _inputFailed = true;
+                        Volatile.Write(ref _failureReason, (int)InputFailureReason.InjectionBlocked);
+                    }
                 }
             }, running => StateChanged?.Invoke(this, running));
         }
@@ -72,9 +83,14 @@ namespace FlowClicker.Core.Services
                         if (ct.IsCancellationRequested) return;
                     }
 
-                    if (!_action.Send(pt.Button, pt.Type, (pt.X, pt.Y), ct))
+                    var result = _action.SendDetailed(pt.Button, pt.Type, (pt.X, pt.Y), ct);
+                    if (result != InputSendResult.Success)
                     {
-                        InputFailed = !ct.IsCancellationRequested;
+                        if (!ct.IsCancellationRequested && result != InputSendResult.Cancelled)
+                        {
+                            _inputFailed = true;
+                            Volatile.Write(ref _failureReason, (int)MouseAction.ToFailureReason(result));
+                        }
                         return;
                     }
 
@@ -94,7 +110,6 @@ namespace FlowClicker.Core.Services
                     break;
                 }
             }
-
         }
 
         private static void WaitExact(int ms, CancellationToken ct)

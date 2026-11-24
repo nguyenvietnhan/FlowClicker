@@ -13,6 +13,20 @@ internal sealed class MouseWorker : IDisposable
 
     public void Start(string name, ThreadPriority priority, Action<CancellationToken> run, Action<bool> stateChanged)
     {
+        Thread? stoppingThread = null;
+        lock (_gate)
+        {
+            if (_disposed)
+                return;
+
+            if (_cancellation is { IsCancellationRequested: true } && _thread != Thread.CurrentThread)
+                stoppingThread = _thread;
+            else if (IsRunning)
+                return;
+        }
+
+        stoppingThread?.Join(200);
+
         lock (_gate)
         {
             if (_disposed || IsRunning)

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Windows;
+using System.Windows.Threading;
 using FlowClicker.Core.Engine;
 using FlowClicker.Core.Native;
 using FlowClicker.Core.Services;
@@ -12,22 +14,23 @@ namespace FlowClicker
 {
     public partial class App : Application
     {
-        private const string MutexGuid = "Global\\FlowClicker_SingleInstance_E7B6C8A4-59D2-4E1B-94F0-A5E6B7C8D9E0";
+        public const string WaitForInstanceArg = "--wait-for-instance";
+        private const string MutexName = "Local\\FlowClicker_SingleInstance_E7B6C8A4-59D2-4E1B-94F0-A5E6B7C8D9E0";
         private static Mutex? _appMutex;
+        private static bool _ownsMutex;
         public static readonly int WmActivateInstance = NativeMethods.RegisterWindowMessage("FLOWCLICKER_ACTIVATE_INSTANCE");
 
         public static IServiceProvider ServiceProvider { get; private set; } = null!;
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            // Single-Instance Enforcement
-            _appMutex = new Mutex(true, MutexGuid, out bool isNewInstance);
-            if (!isNewInstance)
+            DispatcherUnhandledException += OnDispatcherUnhandledException;
+            AppDomain.CurrentDomain.UnhandledException += OnDomainUnhandledException;
+
+            bool waitForPrevious = e.Args.Contains(WaitForInstanceArg, StringComparer.OrdinalIgnoreCase);
+            if (!AcquireSingleInstanceMutex(waitForPrevious))
             {
-                // Broadcast wakeup to activate existing running window
                 NativeMethods.PostMessage((IntPtr)NativeMethods.HWND_BROADCAST, (uint)WmActivateInstance, IntPtr.Zero, IntPtr.Zero);
-                _appMutex.Dispose();
-                _appMutex = null;
                 Shutdown();
                 return;
             }
@@ -38,16 +41,53 @@ namespace FlowClicker
             ServiceProvider = services.BuildServiceProvider();
 
             // Launch Main Window
-            ApplicationThemeManager.ApplySystemTheme();
+            var settingsVm = ServiceProvider.GetRequiredService<SettingsViewModel>();
+            settingsVm.ApplyTheme();
             var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
             mainWindow.Show();
 
             base.OnStartup(e);
         }
 
+        private static bool AcquireSingleInstanceMutex(bool waitForPrevious)
+        {
+            _appMutex = new Mutex(false, MutexName, out bool createdNew);
+            if (createdNew)
+            {
+                try
+                {
+                    _ownsMutex = _appMutex.WaitOne(0);
+                }
+                catch (AbandonedMutexException)
+                {
+                    _ownsMutex = true;
+                }
+                return true;
+            }
+
+            int timeoutMs = waitForPrevious ? 5000 : 0;
+            try
+            {
+                _ownsMutex = _appMutex.WaitOne(timeoutMs);
+            }
+            catch (AbandonedMutexException)
+            {
+                _ownsMutex = true;
+            }
+
+            if (!_ownsMutex)
+            {
+                _appMutex.Dispose();
+                _appMutex = null;
+            }
+
+            return _ownsMutex;
+        }
+
         private static void ConfigureServices(IServiceCollection services)
         {
             // Core Engines & Services
+            services.AddSingleton<SettingsPersistenceService>();
             services.AddSingleton<IClickEngine, ClickEngine>();
             services.AddSingleton<ISequenceEngine, SequenceEngine>();
             services.AddSingleton<IMouseUtilityService, MouseUtilityService>();
@@ -64,12 +104,34 @@ namespace FlowClicker
             services.AddSingleton<MainWindow>();
         }
 
+        private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            MouseAction.EmergencyRelease();
+        }
+
+        private static void OnDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            MouseAction.EmergencyRelease();
+        }
+
         protected override void OnExit(ExitEventArgs e)
         {
-            // Release mouse buttons and single-instance mutex
+            DispatcherUnhandledException -= OnDispatcherUnhandledException;
+            AppDomain.CurrentDomain.UnhandledException -= OnDomainUnhandledException;
+
+            // Release mouse buttons, flush settings, and release single-instance mutex
+            MouseAction.EmergencyRelease();
             (ServiceProvider as IDisposable)?.Dispose();
-            _appMutex?.ReleaseMutex();
-            _appMutex?.Dispose();
+            if (_appMutex != null)
+            {
+                if (_ownsMutex)
+                {
+                    try { _appMutex.ReleaseMutex(); } catch { }
+                    _ownsMutex = false;
+                }
+                _appMutex.Dispose();
+                _appMutex = null;
+            }
             base.OnExit(e);
         }
     }

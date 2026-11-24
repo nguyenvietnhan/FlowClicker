@@ -7,6 +7,7 @@ namespace FlowClicker.Core.Engine
     {
         bool IsRunning { get; }
         bool InputFailed { get; }
+        InputFailureReason FailureReason { get; }
         long TotalClicks { get; }
         void Start(ClickEngineConfiguration config);
         void Stop();

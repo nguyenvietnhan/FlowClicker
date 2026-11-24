@@ -8,6 +8,7 @@ namespace FlowClicker.Core.Services
     {
         bool IsRunning { get; }
         bool InputFailed { get; }
+        InputFailureReason FailureReason { get; }
         int CurrentStepIndex { get; }
         int CompletedCycles { get; }
         void Start(IReadOnlyList<SequenceActionPoint> points, int repeatCount = 0);

@@ -52,6 +52,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -68,66 +69,78 @@
                         <ui:TextBlock Text="{Binding HotkeyPanic}" FontWeight="SemiBold" Foreground="{DynamicResource SystemFillColorCautionBrush}" />
                     </Border>
 
-                    <ui:TextBlock Grid.Row="2" Text="Pick coordinates" VerticalAlignment="Center" Margin="0,6" />
+                    <ui:TextBlock Grid.Row="2" Text="Pick coordinates (or add point in Multi-Point)" VerticalAlignment="Center" Margin="0,6" />
                     <Border Grid.Row="2" Grid.Column="1" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="4" Padding="10,4" Margin="0,6">
                         <ui:TextBlock Text="{Binding HotkeyPick}" FontWeight="SemiBold" />
+                    </Border>
+
+                    <ui:TextBlock Grid.Row="3" Text="Start or stop Multi-Point sequence" VerticalAlignment="Center" Margin="0,6" />
+                    <Border Grid.Row="3" Grid.Column="1" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="4" Padding="10,4" Margin="0,6">
+                        <ui:TextBlock Text="{Binding HotkeyMultiPoint}" FontWeight="SemiBold" />
                     </Border>
                 </Grid>
             </Border>
 
             <TextBlock Text="Permissions" Style="{StaticResource SectionHeading}" Margin="0,12,0,8" />
             <Border Style="{StaticResource SectionCard}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
 
-                    <StackPanel VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:TextBlock Text="Run as administrator" FontTypography="BodyStrong" VerticalAlignment="Center" Margin="0,0,8,0" />
-                            <Border CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="#22888888" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsAdministrator}" Value="True">
-                                                <Setter Property="Background" Value="#266CCB5F" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <TextBlock FontWeight="SemiBold" FontSize="11">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Text" Value="Standard user" />
-                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                        <StackPanel VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:TextBlock Text="Run as administrator" FontTypography="BodyStrong" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <Border CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#22888888" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsAdministrator}" Value="True">
-                                                    <Setter Property="Text" Value="Administrator" />
-                                                    <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+                                                    <Setter Property="Background" Value="#266CCB5F" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </Border>
+                                    </Border.Style>
+                                    <TextBlock FontWeight="SemiBold" FontSize="11">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="Standard user" />
+                                                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsAdministrator}" Value="True">
+                                                        <Setter Property="Text" Value="Administrator" />
+                                                        <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
+                            </StackPanel>
+                            <ui:TextBlock Text="Allows FlowClicker to click in other elevated apps." TextWrapping="Wrap"
+                                          FontTypography="Caption"
+                                          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                          Margin="0,4,0,0" />
                         </StackPanel>
-                        <ui:TextBlock Text="Allows FlowClicker to click in other elevated apps." TextWrapping="Wrap"
-                                      FontTypography="Caption"
-                                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                      Margin="0,4,0,0" />
-                    </StackPanel>
 
-                    <ui:Button Grid.Column="1"
-                               Command="{Binding RestartAsAdminCommand}"
-                               Content="Restart as administrator"
-                               Appearance="Secondary"
-                               CornerRadius="4"
-                               VerticalAlignment="Center"
-                               Margin="16,0,0,0"
-                               IsEnabled="{Binding IsAdministrator, Converter={StaticResource InverseBooleanConverter}}" />
-                </Grid>
+                        <ui:Button Grid.Column="1"
+                                   Command="{Binding RestartAsAdminCommand}"
+                                   Content="Restart as administrator"
+                                   Appearance="Secondary"
+                                   CornerRadius="4"
+                                   VerticalAlignment="Center"
+                                   Margin="16,0,0,0"
+                                   IsEnabled="{Binding IsAdministrator, Converter={StaticResource InverseBooleanConverter}}" />
+                    </Grid>
+                    <ui:InfoBar Title="Elevation failed"
+                                Message="{Binding AdminErrorMessage}"
+                                IsOpen="{Binding HasAdminError, Mode=TwoWay}"
+                                Severity="Error"
+                                Margin="0,12,0,0" />
+                </StackPanel>
             </Border>
         </StackPanel>
     </ScrollViewer>

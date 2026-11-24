@@ -4,8 +4,10 @@
         Title="Coordinate Picker"
         AllowsTransparency="True"
         WindowStyle="None"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        WindowStartupLocation="Manual"
         Background="#01000000"
-        WindowState="Maximized"
         Topmost="True"
         Cursor="Cross"
         KeyDown="OnKeyDown"
@@ -13,6 +15,8 @@
         MouseMove="OnMouseMove">
     <Canvas x:Name="OverlayCanvas">
         <Border x:Name="CoordBadge"
+                Visibility="Collapsed"
+                IsHitTestVisible="False"
                 Background="#CC000000"
                 CornerRadius="6"
                 Padding="10,6"
@@ -25,7 +29,7 @@
                            FontFamily="Segoe UI Variable Text"
                            FontSize="13"
                            FontWeight="SemiBold"/>
-                <TextBlock Text=" (Click or Enter to select, Esc to cancel)"
+                <TextBlock Text=" (Click, Enter, or F7 to select, Esc to cancel)"
                            Foreground="#AAAAAA"
                            FontFamily="Segoe UI Variable Text"
                            FontSize="11"
