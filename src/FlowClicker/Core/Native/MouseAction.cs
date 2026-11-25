@@ -78,12 +78,49 @@ internal sealed class MouseAction
         _ => InputFailureReason.None
     };
 
-    public static void EmergencyRelease()
+    public static void EmergencyRelease() =>
+        EmergencyRelease(InputInjector.Inject, vk => (NativeMethods.GetAsyncKeyState(vk) & 0x8000) != 0);
+
+    internal static uint EmergencyRelease(Func<INPUT[], int, uint> inject, Func<int, bool> isKeyDown)
     {
         lock (Gate)
         {
-            if (InputInjector.ReleaseAllMouseButtonLocks() == Owners.Length)
-                Array.Clear(Owners);
+            var inputs = new INPUT[Owners.Length];
+            var indices = new int[Owners.Length];
+            int count = 0;
+
+            for (int index = 0; index < Owners.Length; index++)
+            {
+                var button = (ClickMouseButton)index;
+                if (Owners[index] == null && !isKeyDown(GetVirtualKey(button)))
+                    continue;
+
+                var (_, up, data) = GetFlags(button);
+                inputs[count] = ButtonInput(up, data);
+                indices[count] = index;
+                count++;
+            }
+
+            if (count == 0)
+                return 0;
+
+            uint sent = inject(inputs, count);
+            for (int i = 0; i < (int)Math.Min(sent, (uint)count); i++)
+                Owners[indices[i]] = null;
+            return sent;
+        }
+    }
+
+    public static bool HasAnyOwnedButton()
+    {
+        lock (Gate)
+        {
+            for (int i = 0; i < Owners.Length; i++)
+            {
+                if (Owners[i] != null)
+                    return true;
+            }
+            return false;
         }
     }
 
@@ -118,5 +155,14 @@ internal sealed class MouseAction
         ClickMouseButton.XButton1 => (NativeMethods.MOUSEEVENTF_XDOWN, NativeMethods.MOUSEEVENTF_XUP, NativeMethods.XBUTTON1),
         ClickMouseButton.XButton2 => (NativeMethods.MOUSEEVENTF_XDOWN, NativeMethods.MOUSEEVENTF_XUP, NativeMethods.XBUTTON2),
         _ => (NativeMethods.MOUSEEVENTF_LEFTDOWN, NativeMethods.MOUSEEVENTF_LEFTUP, 0)
+    };
+
+    private static int GetVirtualKey(ClickMouseButton button) => button switch
+    {
+        ClickMouseButton.Right => NativeMethods.VK_RBUTTON,
+        ClickMouseButton.Middle => NativeMethods.VK_MBUTTON,
+        ClickMouseButton.XButton1 => NativeMethods.VK_XBUTTON1,
+        ClickMouseButton.XButton2 => NativeMethods.VK_XBUTTON2,
+        _ => NativeMethods.VK_LBUTTON
     };
 }

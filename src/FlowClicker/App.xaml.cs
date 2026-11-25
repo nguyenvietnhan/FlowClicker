@@ -119,9 +119,11 @@ namespace FlowClicker
             DispatcherUnhandledException -= OnDispatcherUnhandledException;
             AppDomain.CurrentDomain.UnhandledException -= OnDomainUnhandledException;
 
-            // Release mouse buttons, flush settings, and release single-instance mutex
-            MouseAction.EmergencyRelease();
+            // Dispose services first so only buttons held by FlowClicker are released,
+            // then flush settings and release the single-instance mutex.
             (ServiceProvider as IDisposable)?.Dispose();
+            if (MouseAction.HasAnyOwnedButton())
+                MouseAction.EmergencyRelease();
             if (_appMutex != null)
             {
                 if (_ownsMutex)

@@ -212,5 +212,13 @@ namespace FlowClicker.Tests
                     Directory.Delete(tempDir, recursive: true);
             }
         }
+
+        [Fact]
+        public void SettingsViewModel_ExposesAssemblyVersion()
+        {
+            var vm = new SettingsViewModel();
+            string expected = $"v{typeof(SettingsViewModel).Assembly.GetName().Version!.ToString(3)}";
+            Assert.Equal(expected, vm.AppVersion);
+        }
     }
 }

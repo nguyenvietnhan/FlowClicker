@@ -332,5 +332,55 @@ namespace FlowClicker.Tests
             Assert.True(SpinWait.SpinUntil(() => !service.IsAutoScrollRunning && service.InputFailed, 2000));
             Assert.Equal(InputFailureReason.InjectionBlocked, service.FailureReason);
         }
+
+        [Fact]
+        public void MouseAction_EmergencyRelease_SkipsUnpressedButtonsEspeciallyXButtons()
+        {
+            var holder = new MouseAction((_, count) => (uint)count);
+            var releasedFlags = new List<uint>();
+
+            try
+            {
+                // Nothing held and no physical keys down -> injects 0 events (no stray XBUTTON1/XBUTTON2 UP)
+                uint count = MouseAction.EmergencyRelease((inputs, n) =>
+                {
+                    for (int i = 0; i < n; i++) releasedFlags.Add(inputs[i].mi.dwFlags);
+                    return (uint)n;
+                }, _ => false);
+                Assert.Equal(0u, count);
+                Assert.Empty(releasedFlags);
+
+                // Hold only Left button -> releases only Left button
+                Assert.True(holder.Send(ClickMouseButton.Left, ClickType.Hold));
+                Assert.True(MouseAction.HasAnyOwnedButton());
+
+                count = MouseAction.EmergencyRelease((inputs, n) =>
+                {
+                    for (int i = 0; i < n; i++) releasedFlags.Add(inputs[i].mi.dwFlags);
+                    return (uint)n;
+                }, _ => false);
+
+                Assert.Equal(1u, count);
+                Assert.Single(releasedFlags);
+                Assert.Equal(NativeMethods.MOUSEEVENTF_LEFTUP, releasedFlags[0]);
+                Assert.False(MouseAction.HasAnyOwnedButton());
+
+                // Unowned stuck Right key -> releases only Right button
+                releasedFlags.Clear();
+                count = MouseAction.EmergencyRelease((inputs, n) =>
+                {
+                    for (int i = 0; i < n; i++) releasedFlags.Add(inputs[i].mi.dwFlags);
+                    return (uint)n;
+                }, vk => vk == NativeMethods.VK_RBUTTON);
+
+                Assert.Equal(1u, count);
+                Assert.Single(releasedFlags);
+                Assert.Equal(NativeMethods.MOUSEEVENTF_RIGHTUP, releasedFlags[0]);
+            }
+            finally
+            {
+                holder.Release();
+            }
+        }
     }
 }

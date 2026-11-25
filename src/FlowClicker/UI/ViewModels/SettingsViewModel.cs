@@ -53,7 +53,7 @@ namespace FlowClicker.UI.ViewModels
         private string _adminErrorMessage = string.Empty;
 
         public string AppVersion =>
-            $"v{typeof(SettingsViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.0.5"}";
+            $"v{typeof(SettingsViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.0.6"}";
 
         public event EventHandler? StopWorkersRequested;
 

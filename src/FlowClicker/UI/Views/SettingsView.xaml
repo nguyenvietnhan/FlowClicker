@@ -8,7 +8,26 @@
              d:DesignHeight="700" d:DesignWidth="800">
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,16,24,24">
         <StackPanel>
-            <TextBlock Text="Settings" Style="{StaticResource PageHeading}" />
+            <Grid Margin="0,0,0,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Settings" Style="{StaticResource PageHeading}" Margin="0" VerticalAlignment="Center" />
+                <Border Grid.Column="1"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="10,4"
+                        VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <ui:TextBlock Text="Version " FontTypography="Caption"
+                                      Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        <ui:TextBlock Text="{Binding AppVersion}" FontTypography="Caption" FontWeight="SemiBold" />
+                    </StackPanel>
+                </Border>
+            </Grid>
 
             <TextBlock Text="Appearance and window" Style="{StaticResource SectionHeading}" />
             <ui:CardControl Style="{StaticResource SettingsRow}">
